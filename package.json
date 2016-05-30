@@ -1,0 +1,16 @@
+{
+  "author": {
+    "name": "Tapio Auvinen"
+  },
+  "dependencies": {},
+  "description": "acos-pointandclick",
+  "devDependencies": {},
+  "license": "MIT",
+  "main": "index.js",
+  "name": "acos-pointandclick",
+  "optionalDependencies": {},
+  "readme": "",
+  "readmeFilename": "README.md",
+  "scripts": {},
+  "version": "0.0.1"
+}

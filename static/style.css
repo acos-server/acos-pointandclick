@@ -1,0 +1,20 @@
+.pointandclick .exercise {
+  cursor: pointer;
+}
+
+.pointandclick .clickable:hover {
+  color: gray;
+  text-decoration: underline;
+}
+
+.pointandclick .feedback {
+  padding: 1em;
+}
+
+.pointandclick .feedback.correct {
+  background: #cfc;
+}
+
+.pointandclick .feedback.wrong {
+  background: #fcc;
+}
