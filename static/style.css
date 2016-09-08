@@ -2,8 +2,17 @@
   cursor: pointer;
 }
 
+/* J-M added */
+.pointandclick .clickable:visited, {
+  color: red;
+}
+
+* {
+  font-family: "Monospace", Lucida;
+}
+    
 .pointandclick .clickable:hover {
-  color: gray;
+  color: blue;
   text-decoration: underline;
 }
 
