@@ -1,9 +1,11 @@
-.pointandclick .exercise {
+.pointandclick-error {
+}
+
+.exercise {
   cursor: pointer;
 }
 
-/* J-M added */
-.pointandclick .clickable:visited, {
+.clickable:visited, {
   color: red;
 }
 
@@ -11,19 +13,20 @@
   font-family: "Monospace", Lucida;
 }
     
-.pointandclick .clickable:hover {
+.clickable:hover {
   color: blue;
-  text-decoration: underline;
+  background: #eee;
+  cursor: pointer;
 }
 
-.pointandclick .feedback {
+.feedback {
   padding: 1em;
 }
 
-.pointandclick .feedback.correct {
+.feedback.correct {
   background: #cfc;
 }
 
-.pointandclick .feedback.wrong {
+.feedback.wrong {
   background: #fcc;
 }

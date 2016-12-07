@@ -2,11 +2,16 @@
   "author": {
     "name": "Tapio Auvinen"
   },
-  "dependencies": {},
+  "dependencies": {
+    "lex": "~1.7.9",
+    "fs": "0.0.2",  
+    "xml2js": "0.4.17",
+    "underscore": "1.8"
+  },
   "description": "acos-pointandclick",
   "devDependencies": {},
   "license": "MIT",
-  "main": "index.js",
+  "main": "index.coffee",
   "name": "acos-pointandclick",
   "optionalDependencies": {},
   "readme": "",
