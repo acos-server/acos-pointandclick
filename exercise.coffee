@@ -4,7 +4,7 @@ _ = require('underscore')
 class ExerciseNode
     
   addChildren: (children) ->
-    @children ||= []
+    return unless children?
     
     if children instanceof Array
       @children = @children.concat(children)
@@ -22,7 +22,7 @@ class ExerciseNode
   #  @children.map((child) -> child.text).filter((item) -> !!item).join(' ')
     
 
-# A plain text node
+# A plain text node. This node never has children.
 class ExerciseTextNode extends ExerciseNode
   constructor: (text) ->
     @text = text
@@ -36,17 +36,15 @@ class ExerciseTextNode extends ExerciseNode
 
 # A generic HTML node, which may have children
 class ExerciseHtmlNode extends ExerciseNode
-  # node: xml2js dom node
   constructor: (name, attributes) ->
     @nodeName = name
     @attributes = attributes || {}
     
-  # Renders the node and its children as HTML
-  # Returns a string
+  # Renders the node and its children as HTML and returns a String
   # options:
-  # {omitRoot: true} renders only the children
+  # {omitRoot: true} renders only the children without this tag itself
   html: (options = {}) ->
-    # Render attributes into a string, e.g. "class='highlight'"
+    # Render attributes into a string, e.g. " class='warning'"
     attributesHtml = if @attributes
       ' ' + (Object.keys(@attributes).map (attribute) =>
         # The only characters that must be escaped within attributes are amp and quot
@@ -69,14 +67,14 @@ class ExerciseHtmlNode extends ExerciseNode
               " />"
 
 # This node stores only its own attributes and text data. If ExercisetextNodes are added as children, their text is concatenated into @text.
-class ExerciseShallowHtmlNode extends ExerciseHtmlNode
-  addChildren: (children) ->
-    @text ||= ''
-    children = [children] unless children instanceof Array
-    
-    for child in children
-      if child instanceof ExerciseTextNode
-        @text += child.text
+# class ExerciseShallowHtmlNode extends ExerciseHtmlNode
+#   addChildren: (children) ->
+#     @text ||= ''
+#     children = [children] unless children instanceof Array
+#     
+#     for child in children
+#       if child instanceof ExerciseTextNode
+#         @text += child.text
 
 
 class FeedbackableNode extends ExerciseNode
@@ -119,7 +117,11 @@ class ExerciseFillinNode extends FeedbackableNode
 Exercise = {
   
   # Parses an XML string and converts it into a tree of ExerciseNodes
-  # Calls callback(error, tree, head) with the resulting ExerciseNode tree
+  # Calls callback(error, tree, head) with the resulting ExerciseNode tree.
+  # error: Error message in a String, or undefined
+  # tree: an ExerciseNode, root of the tree
+  # head: a ExerciseHtmlNode with nodeType='head', contains stylesheets and javascript to include
+  # xml: A String containing XML markup
   parseXml: (xml, callback) ->
     # Initialize XML parser
     parser = new xml2js.Parser(
@@ -130,16 +132,17 @@ Exercise = {
       )
     
     # Parse string into an XML DOM
-    parser.parseString xml, (err, result) ->
+    parser.parseString xml, (err, dom) ->
       if err
         callback(err)
       else 
-        Exercise.parseDom(result, callback)
+        Exercise.parseDom(dom, callback)
 
 
   # Parses the XML DOM into a tree of Exercise Nodes
   # Calls callback(error, tree, head) with the resulting ExerciseNode tree
   parseDom: (dom, callback) ->
+    # A function that gives uniqued IDs for elements
     idCounter = (->
       current = 0
       return -> current++
@@ -171,28 +174,21 @@ Exercise = {
   # returns: ExerciseNode or array of ExerciseNodes
   parseDomNode: (xmlNode, idCounter) ->
     nodeName = xmlNode['#name']
+    attributes = xmlNode['$']
 
     if nodeName == '__text__'
       return Exercise.parseTextNode(xmlNode, idCounter)
     
-    else if nodeName == 'clickable'
-      exerciseNode = new ExerciseClickableNode(idCounter())
-    
-    else if nodeName == 'fillin'
-      exerciseNode = new ExerciseFillinNode(idCounter())
-    
-    else if nodeName == 'feedback'
-      exerciseNode = new ExerciseShallowHtmlNode(xmlNode['#name'], xmlNode['$'])
+    else if nodeName == 'clickable' || nodeName == 'fillin'
+      return Exercise.parseInteractiveNode(xmlNode, idCounter)
       
     else
-      exerciseNode = new ExerciseHtmlNode(xmlNode['#name'], xmlNode['$'])
+      exerciseNode = new ExerciseHtmlNode(nodeName, attributes)
     
-    # Add children
-    childNodes = xmlNode['$$']
-    
-    if childNodes
-      exerciseNode.addChildren _.flatten childNodes.map (child) ->
-        Exercise.parseDomNode(child, idCounter)
+      childNodes = xmlNode['$$']
+      if childNodes
+        exerciseNode.addChildren _.flatten childNodes.map (child) ->
+          Exercise.parseDomNode(child, idCounter)
   
     return exerciseNode
   
@@ -229,6 +225,24 @@ Exercise = {
     
     return nodes
 
+  parseInteractiveNode: (xmlNode, idCounter) ->
+    nodeName = xmlNode['#name']
+    attributes = xmlNode['$']
+    
+    if nodeName == 'clickable'
+      exerciseNode = new ExerciseClickableNode(idCounter())
+    
+    else if nodeName == 'fillin'
+      exerciseNode = new ExerciseFillinNode(idCounter())
+
+    # Parse feedback nodes
+    console.log "Children of interactive node:"
+    console.log xmlNode
+    
+    #else if nodeName == 'feedback'
+    #  exerciseNode = new ExerciseShallowHtmlNode(nodeName, attributes)
+      
+    return exerciseNode
 }
 
 module.exports = Exercise
