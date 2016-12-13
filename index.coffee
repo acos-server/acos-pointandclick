@@ -1,5 +1,5 @@
 fs = require('fs')
-exercise = require('./exercise')
+Exercise = require('./exercise')
 #htmlencode = require('htmlencode').htmlEncode
 #querystring = require('querystring')
 
@@ -37,7 +37,7 @@ Pointandclick =
     contentPackage = handlers.contentPackages[req.params.contentPackage]
     xml = fs.readFileSync(contentPackage.getDir() + '/' + params['name'] + '.xml', 'utf8')
     
-    exercise.parseXml xml, (err, tree, head) ->
+    Exercise.parseXml xml, (err, tree, head) ->
       if err
         handlers.contentTypes.pointandclick.addErrorMessage(err, params)
       else

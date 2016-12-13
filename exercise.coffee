@@ -11,35 +11,16 @@ class ExerciseNode
     else
       @children.push children
   
-  
-    
-  
   # Renders the inner text of all child nodes recursively into a string.
   innerText: () ->
     return '' unless @children
     @children.map((child) -> child.innerText()).join(' ')
 
   # Renders the inner text of only direct child nodes into a string.
-  innerTextShallow: () ->
-    return '' unless @children
-    _.filter(@children.map((child) -> child.text), (item) -> !!item).join(' ')
+  #innerTextShallow: () ->
+  #  return '' unless @children
+  #  @children.map((child) -> child.text).filter((item) -> !!item).join(' ')
     
-
-  # renders <feedback> child nodes into attributes (data-feedback=...)
-  feedbackHtml: () ->
-    return '' unless @children
-  
-    for child in @children
-      if child.nodeName == 'feedback'
-        if child.attributes['correct'] == 'true'
-          correctFeedback = child.innerText()
-        else
-          incorrectFeedback = child.innerText()
-
-    attributes = []
-    attributes.push "data-correct-feedback='#{correctFeedback}'" if correctFeedback
-    attributes.push "data-incorrect-feedback='#{incorrectFeedback}'" if incorrectFeedback
-    attributes.join (' ')
 
 # A plain text node
 class ExerciseTextNode extends ExerciseNode
@@ -87,26 +68,51 @@ class ExerciseHtmlNode extends ExerciseNode
               attributesHtml +
               " />"
 
+# This node stores only its own attributes and text data. If ExercisetextNodes are added as children, their text is concatenated into @text.
+class ExerciseShallowHtmlNode extends ExerciseHtmlNode
+  addChildren: (children) ->
+    @text ||= ''
+    children = [children] unless children instanceof Array
+    
+    for child in children
+      if child instanceof ExerciseTextNode
+        @text += child.text
 
-class ExerciseClickableNode extends ExerciseNode
+
+class FeedbackableNode extends ExerciseNode
+  addChildren: (children) ->
+    children = [children] unless children instanceof Array
+    
+    for child in children
+      if child instanceof ExerciseTextNode
+        @text = child.text
+    
+      else if child.nodeName == 'feedback'
+        if child.attributes && child.attributes.correct?
+          @correctFeedback = child.text
+        else
+          @incorrectFeedback = child.text
+  
+  feedbackHtml: ->
+    attributes = []
+    attributes.push "data-correct-feedback='#{@correctFeedback}'" if @correctFeedback
+    attributes.push "data-incorrect-feedback='#{@incorrectFeedback}'" if @incorrectFeedback
+    attributes.join (' ')
+  
+
+class ExerciseClickableNode extends FeedbackableNode
   constructor: (@id) ->
+    @text = ' '
     
   html: ->
-    feedback = this.feedbackHtml()
-    text = this.innerTextShallow()
-  
-    "<span id='#{@id}' #{feedback} class='clickable'>#{text}</span>"
+    "<span id='#{@id}' #{this.feedbackHtml()} class='clickable'>#{@text}</span>"
     
 
-class ExerciseFillinNode extends ExerciseNode
+class ExerciseFillinNode extends FeedbackableNode
   constructor: (@id) ->
-    #@attributes = node['$']
-    
-  html: ->
-    feedback = this.feedbackHtml()
-    text = this.innerTextShallow()
   
-    "<input id='#{id}' type='text' #{feedback} />"
+  html: ->
+    "<input id='#{id}' type='text' #{this.feedbackHtml()} />"
 
 
 
@@ -175,8 +181,10 @@ Exercise = {
     else if nodeName == 'fillin'
       exerciseNode = new ExerciseFillinNode(idCounter())
     
+    else if nodeName == 'feedback'
+      exerciseNode = new ExerciseShallowHtmlNode(xmlNode['#name'], xmlNode['$'])
+      
     else
-      console.log "creating #{xmlNode['#name']}"
       exerciseNode = new ExerciseHtmlNode(xmlNode['#name'], xmlNode['$'])
     
     # Add children
