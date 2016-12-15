@@ -1,53 +1,115 @@
-$(function() {
-  var questionStatus = {};
-  var feedbackDiv = $('.pointandclick .feedback');
+var Pointandclick = (function() {
+  function Pointandclick() {
+    var self = this;
+    var idCounter = 0;
+    this.questionElements = [];
+    this.questionAnswered = {};
+    this.feedbackDiv = $('#pointandclick-feedback');
+    this.pointsDiv = $('#pointandclick-points');
+    this.correctClicks = 0;
+    this.incorrectClicks = 0;
+    
+    $('.clickable').each(function(e) {
+      uniqueId = idCounter++;
+      $(this).data('id', uniqueId);
+      questionLabel = $(this).data('label');
+      self.questionElements.push($(this));
+      self.questionAnswered[uniqueId] = false;
+      $(this).click($.proxy(clickWord, self));
+    });
+    
+    this.checkCompletion = checkCompletion;
+    this.exerciseCompleted = exerciseCompleted;
+    this.updatePoints = updatePoints;
+  }
   
-  var clickWord = function(event) {
-    var element = $(this);
-    questionId = $(this).data('question');
+  function clickWord(event) {
+    var element = $(event.target);
+    var questionId = element.data('id');
+    var questionLabel = element.data('label');
+    var payload = window.pointandclick[questionLabel];
+    var wasAnswered = this.questionAnswered[questionId];
     
-    feedbackDiv.removeClass('correct').removeClass('wrong');
-    answer = window.pointandclick[questionId];
+    this.feedbackDiv.removeClass('correct').removeClass('wrong');
     
-    if (!answer) {
-      feedbackDiv.text("[Answer not set]");
+    if (!payload) {
+      this.feedbackDiv.text("[Error: Question not configured (id="+questionId+")]");
       return;
     }
-    questionStatus[questionId] = true;
     
-    if (answer.correct) {
-      feedbackDiv.addClass('correct');
-      feedbackDiv.html(answer.feedback);
+    element.data('answered', true);
+    this.questionAnswered[questionId] = true;
+    
+    // Update styles
+    if (payload.correct === "true") {
+      this.feedbackDiv.addClass('correct');
+      element.addClass('correct');
+      
+      if (!wasAnswered) {
+        this.correctClicks += 1;
+      }
+    } else if (payload.correct === "false") {
+      this.feedbackDiv.addClass('wrong');
+      element.addClass('wrong');
+      
+      if (!wasAnswered) {
+        this.incorrectClicks += 1;
+      }
     } else {
-      feedbackDiv.addClass('wrong');
-      feedbackDiv.html(answer.feedback);
+      this.feedbackDiv.addClass('neutral');
     }
     
-    // Check if every question has been answered
-    allQuestionsAnswered = true;
-    maxPoints = 0;
-    penalty = 0;
-    Object.keys(questionStatus).forEach(function (questionId) { 
-      required = window.pointandclick[questionId].correct;
+    // Reveal correct answer
+    if (payload.reveal) {
+      element.text(payload.reveal);
+    }
+    
+    // Show feedback
+    if (payload.feedback) {
+      this.feedbackDiv.html(payload.feedback);
+    }
+    
+    console.log("Calling updatePoints");
+    this.updatePoints();
+    this.checkCompletion();
+  };
+  
+  // Checks if every question has been answered
+  function checkCompletion() {
+    var self = this;
+    var allQuestionsAnswered = true;
+    var maxPoints = 0;
+    var penalty = 0;
+    
+    // Object.keys(this.questionElements).forEach(function (questionElement) {
+    this.questionElements.forEach(function (questionElement) { 
+      var questionLabel = questionElement.data('label');
+      var questionId = questionElement.data('id');
+      console.log("Checking " + questionLabel + " (" + questionId + ")");
+      
+      var required = window.pointandclick[questionLabel].correct === "true";
+      var prohibited = window.pointandclick[questionLabel].correct === "false";
       
       if (required)
         maxPoints += 1;
       
-      if (!required && questionStatus[questionId] === true) {
+      if (prohibited && self.questionAnswered[questionId] === true) {
         penalty += 1;
       }
       
-      if (required && questionStatus[questionId] === false) {
+      if (required && !self.questionAnswered[questionId]) {
         allQuestionsAnswered = false;
       }
     });
     
     if (allQuestionsAnswered) {
-      exerciseCompleted(maxPoints, maxPoints - penalty);
+      this.exerciseCompleted(maxPoints, maxPoints - penalty);
     }
-  };
-  
-  var exerciseCompleted = function(maxPoints, points) {
+  }
+    
+  function exerciseCompleted(maxPoints, points) {
+    console.log("Completed");
+    
     if (points < 0)
       points = 0;
     
@@ -57,54 +119,16 @@ $(function() {
     if (window.ACOS) {
       ACOS.sendEvent('grade', { max_points: maxPoints, points: points });
     }
-  };
+  }
+
+  function updatePoints() {
+    console.log("Update points")
+    this.pointsDiv.html("Correct: " + this.correctClicks + "<br />Wrong: " + this.incorrectClicks)
+  }
   
-  $('.pointandclick').each(function() {
-    var element = $(this);
-    
-    $('.exercise span').each(function(e) {
-      questionId = $(this).data('question');
-      questionStatus[questionId] = false;
-      
-      $(this).addClass('clickable').click(clickWord);
-    });
-    
-    // var id = element.attr('data-id');
-    // var data = window.annotated;
-    
-    if (false && data[id]) {
-      var counter = 0;
+  return Pointandclick;
+})();
 
-      $('<div></div>').appendTo(element).addClass('annotated-description').text(data[id].description);
-
-      data[id].lines.forEach(function(line) {
-        var lineDiv = $('<div></div>').appendTo(element).attr('data-line', ++counter);
-        var toggleDiv = $('<div></div>').addClass('annotated-line-toggle').appendTo(lineDiv);
-
-        if (line.comment) {
-          $('<div></div>').appendTo(toggleDiv).text('?').attr('data-line', counter).click(function(e) {
-            e.preventDefault();
-            var button = $(this);
-            element.find('.annotated-comment[data-line!="' + $(this).attr('data-line') + '"]').hide();
-            element.find('.annotated-line-toggle div').text('?');
-            var commentDiv = element.find('.annotated-comment[data-line="' + $(this).attr('data-line') + '"]');
-            commentDiv.toggle(100, function() {
-              if (commentDiv.is(':visible')) {
-                button.text('-');
-                if (window.ACOS) {
-                  ACOS.sendEvent('line', $(this).attr('data-line'));
-                  ACOS.sendEvent('log', { exampleId: id, type: 'open', line: $(this).attr('data-line') });
-                }
-              }
-
-            });
-          });
-          lineDiv.after($('<div></div>').addClass('annotated-comment').text(line.comment).attr('data-line', counter).hide());
-        }
-
-        $('<div></div>').addClass('annotated-line-number').text(counter).appendTo(lineDiv);
-        $('<div></div>').addClass('annotated-line-code').text(line.line).appendTo(lineDiv);
-      });
-    }
-  });
+jQuery(function() {
+  exercise = new Pointandclick();
 });

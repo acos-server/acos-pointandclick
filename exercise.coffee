@@ -4,7 +4,8 @@ _ = require('underscore')
 class ExerciseNode
     
   addChildren: (children) ->
-    return unless children?
+    return unless children
+    @children ||= []
     
     if children instanceof Array
       @children = @children.concat(children)
@@ -16,11 +17,6 @@ class ExerciseNode
     return '' unless @children
     @children.map((child) -> child.innerText()).join(' ')
 
-  # Renders the inner text of only direct child nodes into a string.
-  #innerTextShallow: () ->
-  #  return '' unless @children
-  #  @children.map((child) -> child.text).filter((item) -> !!item).join(' ')
-    
 
 # A plain text node. This node never has children.
 class ExerciseTextNode extends ExerciseNode
@@ -66,53 +62,30 @@ class ExerciseHtmlNode extends ExerciseNode
               attributesHtml +
               " />"
 
-# This node stores only its own attributes and text data. If ExercisetextNodes are added as children, their text is concatenated into @text.
-# class ExerciseShallowHtmlNode extends ExerciseHtmlNode
-#   addChildren: (children) ->
-#     @text ||= ''
-#     children = [children] unless children instanceof Array
-#     
-#     for child in children
-#       if child instanceof ExerciseTextNode
-#         @text += child.text
 
-
-class FeedbackableNode extends ExerciseNode
-  addChildren: (children) ->
-    children = [children] unless children instanceof Array
-    
-    for child in children
-      if child instanceof ExerciseTextNode
-        @text = child.text
-    
-      else if child.nodeName == 'feedback'
-        if child.attributes && child.attributes.correct?
-          @correctFeedback = child.text
-        else
-          @incorrectFeedback = child.text
-  
-  feedbackHtml: ->
-    attributes = []
-    attributes.push "data-correct-feedback='#{@correctFeedback}'" if @correctFeedback
-    attributes.push "data-incorrect-feedback='#{@incorrectFeedback}'" if @incorrectFeedback
-    attributes.join (' ')
-  
-
-class ExerciseClickableNode extends FeedbackableNode
-  constructor: (@id) ->
-    @text = ' '
+class ExerciseClickableNode extends ExerciseNode
+  constructor: (@text, @id) ->
+    @text = ' ' if !@text? || @text.length < 1
+    @id = @text if !@id? || @id.length < 1  # Use text as id if no id is given
     
   html: ->
-    "<span id='#{@id}' #{this.feedbackHtml()} class='clickable'>#{@text}</span>"
+    "<span data-label='#{@id}' class='clickable'>#{@text}</span>"
+    #"<span data-label='#{@id}' #{this.feedbackHtml()} class='clickable'>#{@text}</span>"
+    
+  jsonPayload: () ->
+    {correct: @correct, feedback: @feedback, reveal: @reveal}
     
 
-class ExerciseFillinNode extends FeedbackableNode
-  constructor: (@id) ->
-  
+class ExerciseFillinNode extends ExerciseNode
+  constructor: (@text, @id) ->
+    @text = '' if !@text?
+    
   html: ->
-    "<input id='#{id}' type='text' #{this.feedbackHtml()} />"
+    "<input data-label='#{id}' type='text' />"
 
-
+  jsonPayload: () ->
+    {correct: @correct, feedback: @feedback}
+    
 
 Exercise = {
   
@@ -153,7 +126,7 @@ Exercise = {
     if dom['html']
       head = dom['html']['head']
       if head
-        head = Exercise.parseDomNode(head[0], idCounter)
+        head = Exercise.parseDomNode(head[0], idCounter, {disableMarkup: true})
     
       body = dom['html']['body']
       if body && body.length > 0
@@ -172,12 +145,12 @@ Exercise = {
   
   # Parses a node of the XML DOM
   # returns: ExerciseNode or array of ExerciseNodes
-  parseDomNode: (xmlNode, idCounter) ->
+  parseDomNode: (xmlNode, idCounter, options = {}) ->
     nodeName = xmlNode['#name']
     attributes = xmlNode['$']
 
     if nodeName == '__text__'
-      return Exercise.parseTextNode(xmlNode, idCounter)
+      return Exercise.parseTextNode(xmlNode, options)
     
     else if nodeName == 'clickable' || nodeName == 'fillin'
       return Exercise.parseInteractiveNode(xmlNode, idCounter)
@@ -188,61 +161,108 @@ Exercise = {
       childNodes = xmlNode['$$']
       if childNodes
         exerciseNode.addChildren _.flatten childNodes.map (child) ->
-          Exercise.parseDomNode(child, idCounter)
+          Exercise.parseDomNode(child, idCounter, options)
   
     return exerciseNode
   
   
   # Parses a text node of the XML DOM
-  # If the text node contains markup, an array of various ExerciseNodes is returned.
+  # If the text node contains markup (e.g. {}), an array of various ExerciseNodes is returned.
   # Otherwise, a plain ExerciseTextNode is returned.
-  parseTextNode: (xmlNode, idCounter) ->
+  parseTextNode: (xmlNode, options) ->
     nodes = []
     
     # Get original text
     remainingText = xmlNode['_']
     
-    while remainingText.length > 0
+    while remainingText.length > 0 && !options['disableMarkup']?
       # Find curly brackets { }
-      match = remainingText.match(/(\{[^\}]\})/)
-      break unless match
+      match = remainingText.match(/(\{[^\}]*\})/)
+      break if !match?
       
       # Text before brackets is treated as normal text
       before = remainingText.substring(0, match.index)
       nodes.push new ExerciseTextNode(before) if before.length > 0
       
-      # Text inside brackets is treated as a 'clickable'
-      matched = match[0]
-      clickableNode = new ExerciseClickableNode(idCounter())
-      clickableNode.addChildren(new ExerciseTextNode(matched.substring(1, matched.length - 1)))
+      # Text inside brackets is treated as a 'clickable'. Remove brackets.
+      innerText = match[0].substring(1, match[0].length - 1)
+      
+      # Separate id (id:text)
+      parts = innerText.split(':')
+      if parts.length > 1
+        id = parts[0]
+        text = parts[1]
+      else
+        id = innerText
+        text = innerText
+      
+      clickableNode = new ExerciseClickableNode(text, id)
       nodes.push clickableNode
       
       # Continue searching after the closing bracket
-      remainingText = remainingText.substring(match.index + matched.length, remainingText.length)
+      remainingText = remainingText.substring(match.index + innerText.length + 2, remainingText.length)
       
     # Store any remaining text after no more matches are found
     nodes.push new ExerciseTextNode(remainingText) if remainingText.length > 0
     
     return nodes
 
+  
   parseInteractiveNode: (xmlNode, idCounter) ->
     nodeName = xmlNode['#name']
-    attributes = xmlNode['$']
+    attributes = xmlNode['$'] || {}
+    manualId = attributes['id']
     
     if nodeName == 'clickable'
-      exerciseNode = new ExerciseClickableNode(idCounter())
+      exerciseNode = new ExerciseClickableNode(xmlNode['_'], manualId || idCounter())
+      exerciseNode.correct = attributes['correct']
     
     else if nodeName == 'fillin'
-      exerciseNode = new ExerciseFillinNode(idCounter())
+      exerciseNode = new ExerciseFillinNode(xmlNode['_'], manualId || idCounter())
 
-    # Parse feedback nodes
-    console.log "Children of interactive node:"
-    console.log xmlNode
-    
-    #else if nodeName == 'feedback'
-    #  exerciseNode = new ExerciseShallowHtmlNode(nodeName, attributes)
-      
+    # Parse attributes
+
+    # Parse <feedback> child nodes
+    if xmlNode['feedback']
+      for child in xmlNode['feedback']
+        exerciseNode.feedback = child['_']
+#         feedbackAttributes = child['$']
+#         if feedbackAttributes? && feedbackAttributes['correct'] == 'true'
+#           exerciseNode.correctFeedback = child['_']
+#         else
+#           exerciseNode.incorrectFeedback = child['_']
+
+    # Parse <reveal> child nodes
+    if xmlNode['reveal']
+      exerciseNode.reveal = xmlNode['reveal'][0]['_']
+          
     return exerciseNode
+
+
+  # Collects JSON payload recursively from the given tree of ExerciseNodes.
+  # The result is something like {'id1': {payload...}, 'id2': {payload...}}
+  # hash: existing payload on which to build
+  # tree: the root ExerciseNode
+  jsonPayload: (hash, tree) ->
+  
+    # Collect payload recursively
+    dfs = (node) ->
+      payload = hash[node.id]
+      
+      # Add autogenerated payload to existing
+      if node.id? && node.jsonPayload?
+        payload = Object.assign(node.jsonPayload(), payload || {})  # User-provided properties have precedence
+      
+      hash[node.id] = payload
+      
+      return unless node.children?
+      for child in node.children
+        dfs(child)
+    
+    dfs(tree)
+    
+    hash
+  
 }
 
 module.exports = Exercise

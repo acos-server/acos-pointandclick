@@ -5,9 +5,11 @@
 .pointandclick-error {
 }
 
+/*
 .exercise {
   cursor: pointer;
 }
+*/
 
 .clickable:visited, {
   color: red;
@@ -19,14 +21,18 @@
   cursor: pointer;
 }
 
-.feedback {
+#pointandclick-feedback {
   padding: 1em;
 }
 
-.feedback.correct {
+.correct {
   background: #cfc;
 }
 
-.feedback.wrong {
+.wrong {
   background: #fcc;
+}
+
+.neutral {
+  background: #ccf;
 }
