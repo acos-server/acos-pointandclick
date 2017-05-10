@@ -103,11 +103,13 @@ var Pointandclick = (function() {
     });
     
     if (allQuestionsAnswered) {
-      this.exerciseCompleted(maxPoints, maxPoints - penalty);
+      var feedback = '<div id="feedback">You received '+ (maxPoints - penalty) + '/'+ maxPoints +' points.<br/>' +
+          'Correct answers: ' + this.correctClicks + '<br/>Wrong answers: ' + this.incorrectClicks + '</div>';
+      this.exerciseCompleted(maxPoints, maxPoints - penalty, feedback);
     }
   }
     
-  function exerciseCompleted(maxPoints, points) {
+  function exerciseCompleted(maxPoints, points, feedback) {
     console.log("Completed");
     
     if (points < 0)
@@ -117,7 +119,7 @@ var Pointandclick = (function() {
       points = maxPoints;
     
     if (window.ACOS) {
-      ACOS.sendEvent('grade', { max_points: maxPoints, points: points });
+      ACOS.sendEvent('grade', { max_points: maxPoints, points: points, feedback: feedback });
     }
   }
 
