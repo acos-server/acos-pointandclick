@@ -22,7 +22,7 @@ Pointandclick =
           # Get the filename without the extension
           exerciseName = filename.substring(0, filename.length - 4)
           
-          contentPackagePrototype.meta.contents[filename] = {
+          contentPackagePrototype.meta.contents[exerciseName] = {
             'title': exerciseName,
             'description': '',
             'order': order++
@@ -58,7 +58,7 @@ Pointandclick =
         
         params.headContent += '\n<script type="text/javascript">\nwindow.pointandclick = ' + JSON.stringify(payload) + ';\n</script>\n'
     
-        params.bodyContent = '<div class="pointandclick">\n' +
+        params.bodyContent += '<div class="pointandclick">\n' +
           tree.html(omitRoot: true) +
           '\n\n<div id="pointandclick-feedback"></div><div id="pointandclick-points"></div>\n</div>'
 
@@ -69,7 +69,7 @@ Pointandclick =
     params.bodyContent = "<div class='alert-danger'>\n" + error.toString() + "\n</div>"
 
 
-  handleEvent: (event, payload, req, res, protocolPayload) ->
+  handleEvent: (event, payload, req, res, protocolPayload, responseObj, cb) ->
     dir = Pointandclick.config.logDirectory + '/pointandclick/' + req.params.contentPackage
     
     if (event == 'log')
@@ -78,6 +78,8 @@ Pointandclick =
         data = new Date().toISOString() + ' ' + JSON.stringify(payload) + ' ' + JSON.stringify(protocolPayload || {}) + '\n'
         fs.writeFile(dir + '/' + name, data, { flag: 'a' }, ((err) -> ))
       )
+    
+    cb event, payload, req, res, protocolPayload, responseObj
     
 
   # Metadata
