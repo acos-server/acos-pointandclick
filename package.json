@@ -3,10 +3,11 @@
     "name": "Tapio Auvinen"
   },
   "dependencies": {
+    "fs": "0.0.2",
     "lex": "~1.7.9",
-    "fs": "0.0.2",  
-    "xml2js": "0.4.17",
-    "underscore": "1.8"
+    "recursive-readdir": "^2.1.1",
+    "underscore": "1.8",
+    "xml2js": "0.4.17"
   },
   "description": "acos-pointandclick",
   "devDependencies": {},
