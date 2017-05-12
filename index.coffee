@@ -8,7 +8,7 @@ Pointandclick =
   # Registers the content type at server startup
   register: (handlers, app, conf) ->
     handlers.contentTypes.pointandclick = Pointandclick
-    fs.mkdir(conf.logDirectory + '/pointandclick', 0o0775, ((err) -> ))
+    fs.mkdir(conf.logDirectory + "/#{ Pointandclick.namespace }/", 0o0775, ((err) -> ))
     Pointandclick.config = conf
     
   
@@ -70,13 +70,18 @@ Pointandclick =
 
 
   handleEvent: (event, payload, req, res, protocolPayload, responseObj, cb) ->
-    dir = Pointandclick.config.logDirectory + '/pointandclick/' + req.params.contentPackage
+    dir = Pointandclick.config.logDirectory + "/#{ Pointandclick.namespace }/" + req.params.contentPackage
     
     if (event == 'log')
       fs.mkdir(dir, 0o0775, (err) ->
-        name = payload.exampleId.replace(/\.|\/|\\|~/g, "-") + '.log'
+        if (err && err.code != 'EEXIST')
+          # error in creating the directory, the directory does not yet exist
+          console.error err
+          return
+        filename = req.params.name + '.log'
+        # TODO sanitize file name, spaces etc.
         data = new Date().toISOString() + ' ' + JSON.stringify(payload) + ' ' + JSON.stringify(protocolPayload || {}) + '\n'
-        fs.writeFile(dir + '/' + name, data, { flag: 'a' }, ((err) -> ))
+        fs.writeFile(dir + '/' + filename, data, { flag: 'a' }, ((err) -> ))
       )
     
     cb event, payload, req, res, protocolPayload, responseObj

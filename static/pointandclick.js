@@ -69,7 +69,19 @@ var Pointandclick = (function() {
       this.feedbackDiv.html(payload.feedback);
     }
     
-    console.log("Calling updatePoints");
+    // send logging event to ACOS (only once for each clickable element)
+    if (!wasAnswered && window.ACOS) {
+      // log that an element was clicked, with the label a log analyzer can check if it was correct or not (exercise JSON has the same labels)
+      // IDs are unique, labels may be reused
+      // no user ID is used here
+      // if this content type wants to log multiple things, we should add some type key to the payload (type: "click")
+      var logPayload = {
+        qid: questionId,
+        qlabel: questionLabel,
+      };
+      window.ACOS.sendEvent('log', logPayload);
+    }
+    
     this.updatePoints();
     this.checkCompletion();
   };
@@ -85,7 +97,6 @@ var Pointandclick = (function() {
     this.questionElements.forEach(function (questionElement) { 
       var questionLabel = questionElement.data('label');
       var questionId = questionElement.data('id');
-      console.log("Checking " + questionLabel + " (" + questionId + ")");
       
       var required = window.pointandclick[questionLabel].correct === "true";
       var prohibited = window.pointandclick[questionLabel].correct === "false";
@@ -103,14 +114,11 @@ var Pointandclick = (function() {
     });
     
     if (allQuestionsAnswered) {
-      var feedback = '<div id="feedback">You received '+ (maxPoints - penalty) + '/'+ maxPoints +' points.<br/>' +
-          'Correct answers: ' + this.correctClicks + '<br/>Wrong answers: ' + this.incorrectClicks + '</div>';
-      this.exerciseCompleted(maxPoints, maxPoints - penalty, feedback);
+      this.exerciseCompleted(maxPoints, maxPoints - penalty);
     }
   }
     
-  function exerciseCompleted(maxPoints, points, feedback) {
-    console.log("Completed");
+  function exerciseCompleted(maxPoints, points) {
     
     if (points < 0)
       points = 0;
@@ -118,13 +126,15 @@ var Pointandclick = (function() {
     if (points > maxPoints)
       points = maxPoints;
     
+    var feedback = '<div id="feedback">You received '+ points + '/'+ maxPoints +' points.<br/>' +
+        'Correct answers: ' + this.correctClicks + '<br/>Wrong answers: ' + this.incorrectClicks + '</div>';
+    
     if (window.ACOS) {
       ACOS.sendEvent('grade', { max_points: maxPoints, points: points, feedback: feedback });
     }
   }
 
   function updatePoints() {
-    console.log("Update points")
     this.pointsDiv.html("Correct: " + this.correctClicks + "<br />Wrong: " + this.incorrectClicks)
   }
   
