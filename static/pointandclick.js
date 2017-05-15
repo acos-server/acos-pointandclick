@@ -2,10 +2,12 @@ var Pointandclick = (function() {
   function Pointandclick() {
     var self = this;
     var idCounter = 0;
+    this.completed = false;
     this.questionElements = [];
     this.questionAnswered = {};
     this.feedbackDiv = $('#pointandclick-feedback');
     this.pointsDiv = $('#pointandclick-points');
+    this.completeDiv = $('#pointandclick-complete');
     this.correctClicks = 0;
     this.incorrectClicks = 0;
     
@@ -24,6 +26,12 @@ var Pointandclick = (function() {
   }
   
   function clickWord(event) {
+    if (this.completed) {
+      // Exercise has been completed. Ignore further clicks.
+      event.preventDefault();
+      return false;
+    }
+
     var element = $(event.target);
     var questionId = element.data('id');
     var questionLabel = element.data('label');
@@ -114,11 +122,14 @@ var Pointandclick = (function() {
     });
     
     if (allQuestionsAnswered) {
+      this.completed = true;
+      this.completeDiv.text('Exercise finished. Uploading your submission to the server...');
       this.exerciseCompleted(maxPoints, maxPoints - penalty);
     }
   }
     
   function exerciseCompleted(maxPoints, points) {
+    var self = this;
     
     if (points < 0)
       points = 0;
@@ -130,7 +141,10 @@ var Pointandclick = (function() {
         'Correct answers: ' + this.correctClicks + '<br/>Wrong answers: ' + this.incorrectClicks + '</div>';
     
     if (window.ACOS) {
-      ACOS.sendEvent('grade', { max_points: maxPoints, points: points, feedback: feedback });
+      ACOS.sendEvent('grade', { max_points: maxPoints, points: points, feedback: feedback }, function(content) {
+        // the grading result has been sent to the server
+        self.completeDiv.text('Exercise finished. Your submission has been uploaded to the server.');
+      });
     }
   }
 

@@ -93,7 +93,8 @@ Pointandclick =
     
               cache.bodyContent = '<div class="pointandclick">\n' +
                 tree.html(omitRoot: true) +
-                '\n\n<div id="pointandclick-feedback"></div><div id="pointandclick-points"></div>\n</div>'
+                '\n\n<div id="pointandclick-feedback"></div><div id="pointandclick-points"></div>' +
+                '\n<div id="pointandclick-complete"></div>\n</div>'
             
               # parsed exercise data was added to the cache, now add it to the response
               params.headContent += cache.headContent
