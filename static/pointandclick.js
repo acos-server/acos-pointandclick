@@ -3,10 +3,12 @@
   
   var pluginName = 'acosPointAndClick';
   var defaults = {
-    feedback_selector: '#pointandclick-feedback',
-    points_selector: '#pointandclick-points',
-    completed_selector: '#pointandclick-complete',
+    feedback_selector: '.pointandclick-feedback',
+    points_selector: '.pointandclick-points',
+    completed_selector: '.pointandclick-complete',
     clickable_selector: '.clickable',
+    complete_msg_attr: 'data-msg-complete',
+    complete_uploaded_msg_attr: 'data-msg-complete-uploaded',
   };
   
   function AcosPointAndClick(element, options) {
@@ -141,27 +143,27 @@
       
       if (allQuestionsAnswered) {
         this.completed = true;
-        this.completeDiv.text('Exercise finished. Uploading your submission to the server...');
+        this.completeDiv.text(this.completeDiv.attr(this.settings.complete_msg_attr));
         this.exerciseCompleted(maxPoints, maxPoints - penalty);
       }
     },
     
     exerciseCompleted: function(maxPoints, points) {
       var self = this;
-    
+      
       if (points < 0)
         points = 0;
-    
+      
       if (points > maxPoints)
         points = maxPoints;
-    
+      
       var feedback = '<div id="feedback">You received '+ points + '/'+ maxPoints +' points.<br/>' +
           'Correct answers: ' + this.correctClicks + '<br/>Wrong answers: ' + this.incorrectClicks + '</div>';
-    
+      
       if (window.ACOS) {
         ACOS.sendEvent('grade', { max_points: maxPoints, points: points, feedback: feedback }, function(content) {
           // the grading result has been sent to the server
-          self.completeDiv.text('Exercise finished. Your submission has been uploaded to the server.');
+          self.completeDiv.text(self.completeDiv.attr(self.settings.complete_uploaded_msg_attr));
         });
       }
     },

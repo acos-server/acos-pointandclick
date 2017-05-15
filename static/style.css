@@ -21,7 +21,7 @@
   cursor: pointer;
 }
 
-#pointandclick-feedback, #pointandclick-complete {
+.pointandclick-feedback, .pointandclick-complete {
   padding: 1em;
 }
 
