@@ -1,7 +1,11 @@
 <div class="pointandclick">
     {{ exercise|safe }}
     <div class="pointandclick-feedback"></div>
-    <div class="pointandclick-points"></div>
+    <div class="pointandclick-points hide"
+        data-msg-final="&lt;b&gt;You received {points}/{maxPoints} points.&lt;/b&gt;">
+      Correct: <span class="pointandclick-correct-points"></span><br/>
+      Wrong: <span class="pointandclick-wrong-points"></span><br/>
+    </div>
     <div class="pointandclick-complete"
       data-msg-complete="Exercise finished. Uploading your submission to the server..."
       data-msg-complete-uploaded="Exercise finished. Your submission has been uploaded to the server.">

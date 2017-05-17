@@ -36,3 +36,7 @@
 .neutral {
   background: #ccf;
 }
+
+.hide {
+  display: none;
+}
