@@ -1,5 +1,5 @@
 * {
-  font-family: "Monospace", Lucida;
+  font-family: monospace, Lucida;
 }
 
 .pointandclick-error {
@@ -38,4 +38,12 @@
 
 .hide {
   display: none;
+}
+
+code {
+  padding: 2px 4px;
+  font-size: 90%;
+  color: black;
+  background-color: #f9f2f4;
+  border-radius: 4px;
 }

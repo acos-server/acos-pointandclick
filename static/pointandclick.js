@@ -92,6 +92,7 @@
         }
       } else {
         this.feedbackDiv.addClass('neutral');
+        element.addClass('neutral');
       }
       
       // Reveal correct answer
