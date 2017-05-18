@@ -5,11 +5,10 @@
 .pointandclick-error {
 }
 
-/*
-.exercise {
-  cursor: pointer;
+.clickable {
+  /* clickable spaces between words should not be collapsed (zero width, unclickable) at the end of lines */
+  white-space: pre-wrap;
 }
-*/
 
 .clickable:visited, {
   color: red;
