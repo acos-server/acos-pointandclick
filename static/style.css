@@ -26,6 +26,7 @@
 
 .correct {
   background: #cfc;
+  border: solid 2px green;
 }
 
 .wrong {
