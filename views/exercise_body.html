@@ -1,14 +1,19 @@
 <div class="pointandclick">
-    {{ exercise|safe }}
-    <div class="pointandclick-feedback"></div>
-    <div class="pointandclick-points hide"
-        data-msg-final="&lt;b&gt;You received {points}/{maxPoints} points.&lt;/b&gt;">
-      Correct: <span class="pointandclick-correct-points"></span><br/>
-      Wrong: <span class="pointandclick-wrong-points"></span><br/>
+    <div class="pointandclick-content">
+        {{ exercise|safe }}
     </div>
-    <div class="pointandclick-complete"
-      data-msg-complete="Exercise finished. Uploading your submission to the server..."
-      data-msg-complete-uploaded="Exercise finished. Your submission has been uploaded to the server.">
+    
+    <div class="pointandclick-info">
+        <div class="pointandclick-complete hide"
+          data-msg-complete="Exercise finished. Uploading your submission to the server..."
+          data-msg-complete-uploaded="Exercise finished. Your submission has been uploaded to the server.">
+        </div>
+        <div class="pointandclick-feedback"></div>
+        <div class="pointandclick-points hide"
+            data-msg-final="&lt;b&gt;You received {points}/{maxPoints} points.&lt;/b&gt;&lt;br/&gt;">
+          Correct: <span class="pointandclick-correct-clicks"></span><br/>
+          Wrong: <span class="pointandclick-wrong-clicks"></span><br/>
+        </div>
     </div>
 </div>
 

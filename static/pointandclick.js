@@ -5,8 +5,8 @@
   var defaults = {
     feedback_selector: '.pointandclick-feedback',
     points_selector: '.pointandclick-points',
-    correct_points_selector: '.pointandclick-correct-points',
-    wrong_points_selector: '.pointandclick-wrong-points',
+    correct_clicks_selector: '.pointandclick-correct-clicks',
+    wrong_clicks_selector: '.pointandclick-wrong-clicks',
     completed_selector: '.pointandclick-complete',
     clickable_selector: '.clickable',
     complete_msg_attr: 'data-msg-complete',
@@ -25,8 +25,8 @@
     this.feedbackDiv = this.element.find(this.settings.feedback_selector);
     this.pointsDiv = this.element.find(this.settings.points_selector);
     this.completeDiv = this.element.find(this.settings.completed_selector);
-    this.correctPointsElem = this.element.find(this.settings.correct_points_selector);
-    this.wrongPointsElem = this.element.find(this.settings.wrong_points_selector);
+    this.correctPointsElem = this.element.find(this.settings.correct_clicks_selector);
+    this.wrongPointsElem = this.element.find(this.settings.wrong_clicks_selector);
     this.correctClicks = 0;
     this.incorrectClicks = 0;
     this.init();
@@ -144,7 +144,7 @@
       var maxPoints = 0;
       var penalty = 0;
       
-      this.questionElements.forEach(function(questionElement) { 
+      this.questionElements.forEach(function(questionElement) {
         var questionLabel = questionElement.data('label');
         var questionId = questionElement.data('id');
         
@@ -166,11 +166,12 @@
       if (allQuestionsAnswered) {
         this.completed = true;
         this.completeDiv.text(this.completeDiv.attr(this.settings.complete_msg_attr));
-        this.exerciseCompleted(maxPoints, maxPoints - penalty);
+        this.completeDiv.show();
+        this.grade(maxPoints, maxPoints - penalty);
       }
     },
     
-    exerciseCompleted: function(maxPoints, points) {
+    grade: function(maxPoints, points) {
       var self = this;
       
       if (points < 0)
@@ -234,8 +235,8 @@
       var finalPointsStr = pointsElem.attr(this.settings.final_points_msg_attr);
       finalPointsStr = finalPointsStr.replace('{points}', points.toString());
       finalPointsStr = finalPointsStr.replace('{maxPoints}', maxPoints.toString());
-      // append HTML to the points element
-      pointsElem.html(pointsElem.html() + finalPointsStr);
+      // prepend HTML to the points element
+      pointsElem.prepend(finalPointsStr);
     },
 
     updatePoints: function() {
