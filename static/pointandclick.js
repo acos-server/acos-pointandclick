@@ -12,6 +12,9 @@
     complete_msg_attr: 'data-msg-complete',
     complete_uploaded_msg_attr: 'data-msg-complete-uploaded',
     final_points_msg_attr: 'data-msg-final',
+    clicks_left_msg_selector: '.pointandclick-clicksleftmsg',
+    clicks_left_singular_msg_attr: 'data-msg-singular',
+    clicks_left_plural_msg_attr: 'data-msg-plural',
   };
   
   function AcosPointAndClick(element, options) {
@@ -19,7 +22,6 @@
     this.settings = $.extend({}, defaults, options);
     
     this.completed = false;
-    this.questionElements = [];
     this.questionAnswered = {};
     this.allFeedback = [];
     this.feedbackDiv = this.element.find(this.settings.feedback_selector);
@@ -27,8 +29,10 @@
     this.completeDiv = this.element.find(this.settings.completed_selector);
     this.correctPointsElem = this.element.find(this.settings.correct_clicks_selector);
     this.wrongPointsElem = this.element.find(this.settings.wrong_clicks_selector);
+    this.clicksLeftMsgDiv = this.element.find(this.settings.clicks_left_msg_selector);
     this.correctClicks = 0;
     this.incorrectClicks = 0;
+    this.maxCorrectClicks = 0; // total correct answers in the exercise, set in init()
     this.init();
   }
   
@@ -42,8 +46,13 @@
       this.element.find(this.settings.clickable_selector).each(function() {
         var uniqueId = idCounter++;
         $(this).data('id', uniqueId);
-        //var questionLabel = $(this).data('label'); // labels are set by the teacher, they may repeat the same values
-        self.questionElements.push($(this));
+        
+        var questionLabel = $(this).data('label'); // labels are set by the teacher, they may repeat the same values
+        var payload = window.pointandclick[questionLabel];
+        if (payload.correct === "true") {
+          self.maxCorrectClicks++;
+        }
+        
         self.questionAnswered[uniqueId] = false;
         $(this).click(function(ev) {
           self.clickWord(ev);
@@ -72,7 +81,6 @@
         return;
       }
       
-      element.data('answered', true);
       this.questionAnswered[questionId] = true;
       
       // Update styles
@@ -134,59 +142,46 @@
       }
       
       this.updatePoints();
+      this.updateCorrectClicksLeftCounter();
       this.checkCompletion();
     },
     
-    // Checks if every question has been answered
-    checkCompletion: function() {
-      var self = this;
-      var allQuestionsAnswered = true;
-      var maxPoints = 0;
-      var penalty = 0;
-      
-      this.questionElements.forEach(function(questionElement) {
-        var questionLabel = questionElement.data('label');
-        var questionId = questionElement.data('id');
-        
-        var required = window.pointandclick[questionLabel].correct === "true";
-        var prohibited = window.pointandclick[questionLabel].correct === "false";
-        
-        if (required)
-          maxPoints += 1;
-        
-        if (prohibited && self.questionAnswered[questionId] === true) {
-          penalty += 1;
-        }
-        
-        if (required && !self.questionAnswered[questionId]) {
-          allQuestionsAnswered = false;
-        }
-      });
-      
-      if (allQuestionsAnswered) {
-        this.completed = true;
-        this.completeDiv.text(this.completeDiv.attr(this.settings.complete_msg_attr));
-        this.completeDiv.show();
-        this.grade(maxPoints, maxPoints - penalty);
+    updateCorrectClicksLeftCounter: function() {
+      // show correct clicks left counter if the student has found at least 50% of the correct clicks
+      if (this.correctClicks >= 0.5 * this.maxCorrectClicks) {
+        var left = this.maxCorrectClicks - this.correctClicks; // how many clicks left
+        var msgAttr = (left === 1) ? this.settings.clicks_left_singular_msg_attr : this.settings.clicks_left_plural_msg_attr;
+        var msg = this.clicksLeftMsgDiv.attr(msgAttr);
+        msg = msg.replace('{counter}', left.toString());
+        this.clicksLeftMsgDiv.html(msg);
+        this.clicksLeftMsgDiv.show();
       }
     },
     
-    grade: function(maxPoints, points) {
+    // Checks if every question has been answered and if yes, grade the submission
+    checkCompletion: function() {
+      if (this.correctClicks >= this.maxCorrectClicks) {
+        this.completed = true;
+        this.clicksLeftMsgDiv.hide();
+        this.completeDiv.text(this.completeDiv.attr(this.settings.complete_msg_attr));
+        this.completeDiv.show();
+        this.grade();
+      }
+    },
+    
+    grade: function() {
       var self = this;
       
-      if (points < 0)
-        points = 0;
-      
-      if (points > maxPoints)
-        points = maxPoints;
+      var scorePercentage = Math.round(this.maxCorrectClicks / (this.correctClicks + this.incorrectClicks) * 100);
       
       // show final points
-      this.addFinalPointsString(this.pointsDiv, points, maxPoints);
+      this.addFinalPointsString(this.pointsDiv, scorePercentage);
       // feedback for the grading event that is sent to the server
-      var feedback = this.buildFeedback(maxPoints, points);
+      var feedback = this.buildFeedback();
       
       if (window.ACOS) {
-        ACOS.sendEvent('grade', { max_points: maxPoints, points: points, feedback: feedback }, function(content) {
+        // set max points to 100 since the points are given as a percentage 0-100%
+        ACOS.sendEvent('grade', { max_points: 100, points: scorePercentage, feedback: feedback }, function(content) {
           //TODO callback arguments are missing potential error message if the upload fails (from ACOS to LMS), update ACOS docs and protocol events.js ??
           // the grading result has been sent to the server
           self.completeDiv.text(self.completeDiv.attr(self.settings.complete_uploaded_msg_attr));
@@ -194,7 +189,7 @@
       }
     },
 
-    buildFeedback: function(maxPoints, points) {
+    buildFeedback: function() {
       var self = this;
       // clone the exercise element and modify the clone a bit for the final feedback
       var feedbackElem = this.element.clone();
@@ -230,12 +225,11 @@
       return feedbackElem.wrap('<div/>').parent().html();
     },
     
-    addFinalPointsString: function(pointsElem, points, maxPoints) {
-      // string to format, fill in points
+    addFinalPointsString: function(pointsElem, scorePercentage) {
+      // string to format, fill in score
       var finalPointsStr = pointsElem.attr(this.settings.final_points_msg_attr);
-      finalPointsStr = finalPointsStr.replace('{points}', points.toString());
-      finalPointsStr = finalPointsStr.replace('{maxPoints}', maxPoints.toString());
-      // prepend HTML to the points element
+      finalPointsStr = finalPointsStr.replace('{score}', scorePercentage.toString());
+      // prepend the final score HTML to the points element
       pointsElem.prepend(finalPointsStr);
     },
 
