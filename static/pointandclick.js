@@ -9,6 +9,8 @@
     wrong_clicks_selector: '.pointandclick-wrong-clicks',
     completed_selector: '.pointandclick-complete',
     clickable_selector: '.clickable',
+    content_selector: '.pointandclick-content',
+    info_selector: '.pointandclick-info',
     complete_msg_attr: 'data-msg-complete',
     complete_uploading_msg_attr: 'data-msg-complete-uploading',
     complete_uploaded_msg_attr: 'data-msg-complete-uploaded',
@@ -30,6 +32,8 @@
     this.correctPointsElem = this.element.find(this.settings.correct_clicks_selector);
     this.wrongPointsElem = this.element.find(this.settings.wrong_clicks_selector);
     this.clicksLeftMsgDiv = this.element.find(this.settings.clicks_left_msg_selector);
+    this.contentDiv = this.element.find(this.settings.content_selector);
+    this.infoDiv = this.element.find(this.settings.info_selector);
     this.correctClicks = 0;
     this.incorrectClicks = 0;
     this.maxCorrectClicks = 0; // total correct answers in the exercise, set in init()
@@ -60,6 +64,11 @@
         $(this).click(function(ev) {
           self.clickWord(ev);
         });
+      });
+      
+      this.setInfoPosition();
+      $(window).on('resize', function() {
+        self.setInfoPosition();
       });
     },
     
@@ -248,6 +257,25 @@
     
     getWindowUrlDomain: function() {
       return window.location.protocol + '//' + window.location.host;
+    },
+    
+    setInfoPosition: function() {
+      if ($(window).height() * 0.8 > this.contentDiv.height()) {
+        // exercise content fits easily in the window
+        // use normal positioning for the info box
+        this.infoDiv.removeClass('fixed');
+        this.contentDiv.removeClass('fixed-info');
+        this.infoDiv.css('maxHeight', ''); // remove css property
+        this.contentDiv.css('marginBottom', '');
+      } else {
+        // exercise content takes most space in the window or does not fit in:
+        // use fixed positioning for the info box to keep it visible on the screen
+        this.infoDiv.addClass('fixed');
+        this.contentDiv.addClass('fixed-info');
+        var h = $(window).height() * 0.25;
+        this.infoDiv.css('maxHeight', h);
+        this.contentDiv.css('marginBottom', h);
+      }
     },
   });
   

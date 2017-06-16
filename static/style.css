@@ -20,16 +20,19 @@
   cursor: pointer;
 }
 
-.pointandclick-content {
-  margin-bottom: 160px; /* must match the height of the fixed position element .pointandclick-info */
+.pointandclick-content.fixed-info {
+  margin-bottom: 180px; /* must match the height of the fixed position element .pointandclick-info */
 }
 
 .pointandclick-info {
+  background-color: rgb(242, 242, 242);
+}
+
+.pointandclick-info.fixed {
   position: fixed;
   bottom: 0px;
   width: 98%;
-  background-color: rgb(242, 242, 242);
-  max-height: 160px;
+  max-height: 180px;
   overflow-y: scroll;
 }
 
