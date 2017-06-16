@@ -167,10 +167,10 @@ Pointandclick =
   meta: {
     'name': 'pointandclick',
     'shortDescription': 'Content type for point-and-click exercises.',
-    'description': '',
+    'description': 'Content type for point-and-click exercises.',
     'author': 'Tapio Auvinen',
     'license': 'MIT',
-    'version': '0.0.1',
+    'version': '0.1.0',
     'url': ''
   }
 
