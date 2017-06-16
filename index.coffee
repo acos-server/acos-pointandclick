@@ -124,12 +124,25 @@ Pointandclick =
 
 
   handleEvent: (event, payload, req, res, protocolPayload, responseObj, cb) ->
-    dir = Pointandclick.config.logDirectory + "/#{ Pointandclick.namespace }/" + req.params.contentPackage
-    # path like log_dir/"contenttype"/"contentpackage", log files for each exercise will be created there
-    
-    if (event == 'log' &&
+    if event == 'grade' and payload.feedback?
+      # add <style> element for styling the final feedback
+      fs.readFile path.join(__dirname, 'static', 'feedback.css'), 'utf8', (err, cssData) ->
+        if (!err)
+          styleTag = "<style>#{ cssData }</style>"
+          # insert the <style> element inside the feedback <div> at the beginning
+          styleStartIdx = payload.feedback.indexOf('>') + 1 # should be the index after the end of the first <div> start tag
+          payload.feedback = payload.feedback.slice(0, styleStartIdx) + styleTag + payload.feedback.slice(styleStartIdx)
+        
+        cb event, payload, req, res, protocolPayload, responseObj
+      
+      return # cb is called in the callback in this if branch
+      
+    else if (event == 'log' and
         Pointandclick.handlers.contentPackages[req.params.contentPackage].meta.contents[req.params.name]?)
       # log event, checked that the exercise (req.params.name) has been registered in the content package
+      dir = Pointandclick.config.logDirectory + "/#{ Pointandclick.namespace }/" + req.params.contentPackage
+      # path like log_dir/"contenttype"/"contentpackage", log files for each exercise will be created there
+      
       fs.mkdir(dir, 0o0775, (err) ->
         if (err && err.code != 'EEXIST')
           # error in creating the directory, the directory does not yet exist

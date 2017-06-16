@@ -1,8 +1,6 @@
+/* stylesheet for the final feedback of exercise submissions. For example, A+ shows the final feedback on a separate page. */
 .pointandclick {
   font-family: monospace, Lucida;
-}
-
-.pointandclick-error {
 }
 
 .clickable {
@@ -10,51 +8,45 @@
   white-space: pre-wrap;
 }
 
-.clickable:visited, {
-  color: red;
-}
-    
 .clickable:hover {
   color: blue;
   background: #eee;
   cursor: pointer;
 }
 
-.pointandclick-content {
-  margin-bottom: 160px; /* must match the height of the fixed position element .pointandclick-info */
+.pointandclick-content.fixed-info {
+  margin-bottom: 200px; /* must match the height of the fixed position element .pointandclick-info */
 }
 
 .pointandclick-info {
+  background-color: rgb(242, 242, 242);
+}
+
+.pointandclick-info.fixed {
   position: fixed;
   bottom: 0px;
-  width: 98%;
-  background-color: rgb(242, 242, 242);
-  max-height: 160px;
+  max-height: 200px;
   overflow-y: scroll;
 }
 
-.pointandclick-feedback, .pointandclick-complete {
+.pointandclick-feedback {
   padding: 1em;
 }
 
-.correct {
+.pointandclick .correct {
   background: #cfc;
   border: solid 2px green;
 }
 
-.wrong {
+.pointandclick .wrong {
   background: #fcc;
 }
 
-.neutral {
+.pointandclick .neutral {
   background: #ccf;
 }
 
-.hide {
-  display: none;
-}
-
-code {
+.pointandclick code {
   padding: 2px 4px;
   font-size: 90%;
   color: black;

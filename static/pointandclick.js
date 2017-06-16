@@ -23,7 +23,6 @@
     
     this.completed = false;
     this.questionAnswered = {};
-    this.allFeedback = [];
     this.feedbackDiv = this.element.find(this.settings.feedback_selector);
     this.pointsDiv = this.element.find(this.settings.points_selector);
     this.completeDiv = this.element.find(this.settings.completed_selector);
@@ -46,6 +45,9 @@
       this.element.find(this.settings.clickable_selector).each(function() {
         var uniqueId = idCounter++;
         $(this).data('id', uniqueId);
+        // set the id to an attribute as well so that it is available to
+        // the final feedback when the exercise DOM is cloned
+        $(this).attr('data-id', uniqueId);
         
         var questionLabel = $(this).data('label'); // labels are set by the teacher, they may repeat the same values
         var payload = window.pointandclick[questionLabel];
@@ -111,21 +113,8 @@
       // Show feedback
       if (payload.feedback) {
         this.feedbackDiv.html(payload.feedback);
-        if (!wasAnswered) {
-          // copy the click feedback for the final, total feedback
-          var clickFeedbackDiv = this.feedbackDiv.clone();
-          // copy CSS style while the element is attached to the DOM
-          // use inline CSS style in the final feedback (cannot link to external CSS files)
-          clickFeedbackDiv.css({
-            // jQuery .css does not support getting shorthand notation styles (padding)
-            paddingLeft: this.feedbackDiv.css('padding-left'),
-            paddingTop: this.feedbackDiv.css('padding-top'),
-            paddingRight: this.feedbackDiv.css('padding-right'),
-            paddingBottom: this.feedbackDiv.css('padding-bottom'),
-            backgroundColor: this.feedbackDiv.css('background-color'),
-          });
-          this.allFeedback.push(clickFeedbackDiv);
-        }
+      } else {
+        this.feedbackDiv.html('[No feedback set]');
       }
       
       // send logging event to ACOS (only once for each clickable element)
@@ -178,7 +167,6 @@
       this.addFinalPointsString(this.pointsDiv, scorePercentage);
       // feedback for the grading event that is sent to the server
       var feedback = this.buildFeedback();
-      
       if (window.ACOS) {
         // set max points to 100 since the points are given as a percentage 0-100%
         ACOS.sendEvent('grade', { max_points: 100, points: scorePercentage, feedback: feedback }, function(content) {
@@ -194,32 +182,45 @@
       // clone the exercise element and modify the clone a bit for the final feedback
       var feedbackElem = this.element.clone();
       feedbackElem.find(this.settings.completed_selector).remove();
-      feedbackElem.find(this.settings.feedback_selector).remove();
+      feedbackElem.find(this.settings.feedback_selector).empty().removeClass('correct wrong neutral');
+      feedbackElem.find(this.settings.clicks_left_msg_selector).remove();
       
-      // add inline styles to the clicked elements in the exercise
-      // get the background colors used in the original clickable elements so that
-      // they can be set to the corresponding elements in the feedback
-      var getClickableColor = function(selector) {
-        return self.element.find(self.settings.clickable_selector).filter(selector).first().css('background-color');
-      };
-      var clickables = feedbackElem.find(this.settings.clickable_selector);
-      clickables.filter('.correct').css('background-color', getClickableColor('.correct'));
-      clickables.filter('.wrong').css('background-color', getClickableColor('.wrong'));
-      clickables.filter('.neutral').css('background-color', getClickableColor('.neutral'));
+      var labelsUsed = [];
+      // remove class clickable from elements that were not clicked in this submission
+      feedbackElem.find(this.settings.clickable_selector).filter(function(idx) {
+        var questionId = $(this).attr('data-id');
+        if (self.questionAnswered[questionId]) {
+          labelsUsed.push($(this).attr('data-label'));
+          return false;
+        } else {
+          return true;
+        }
+      }).removeClass(this.settings.clickable_selector.substr(1));
       
-      // add feedback for each click to the final feedback
-      var pointsElem = feedbackElem.find(self.settings.points_selector);
-      this.allFeedback.forEach(function(oneFeedbackElem) {
-        // the feedback HTML is not a complete document, hence it can not link to external CSS files
-        // inline CSS was saved in these HTML elements when the feedback for each click was saved
-        pointsElem.before(oneFeedbackElem);
-      });
+      var copy_payload = {};
+      // copy feedback and correct values from the payload for the clicked elements
+      for (var i = 0; i < labelsUsed.length; i++) {
+        if (!(labelsUsed[i] in copy_payload)) {
+          var payload = window.pointandclick[labelsUsed[i]];
+          copy_payload[labelsUsed[i]] = {
+            'feedback': payload.feedback,
+            'correct': payload.correct,
+          };
+        }
+      }
+      
+      // store the copied payload in the feedback element
+      $('<script></script>').text('window.pointandclick = ' + JSON.stringify(copy_payload) + ';').prependTo(feedbackElem);
+      
+      // script that enables click events in the feedback page (click to show feedback)
+      $('<script></script>', {
+        src: this.getWindowUrlDomain() + '/static/pointandclick/feedback.js', // URL to the ACOS server
+      }).appendTo(feedbackElem);
+      
+      // feedback CSS is injected to the feedback HTML in the ACOS server (pointandclick handleEvent)
       
       // ensure that points are visible
-      pointsElem.removeClass('hide');
-      
-      // save the font family to the HTML inline style too
-      feedbackElem.css('font-family', this.element.css('font-family'));
+      feedbackElem.find(self.settings.points_selector).removeClass('hide');
       
       // wrap hack is used to get the outer HTML (HTML string including the top element)
       return feedbackElem.wrap('<div/>').parent().html();
@@ -237,6 +238,10 @@
       this.correctPointsElem.text(this.correctClicks);
       this.wrongPointsElem.text(this.incorrectClicks);
       this.pointsDiv.show();
+    },
+    
+    getWindowUrlDomain: function() {
+      return window.location.protocol + '//' + window.location.host;
     },
   });
   
