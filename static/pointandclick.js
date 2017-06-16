@@ -10,6 +10,7 @@
     completed_selector: '.pointandclick-complete',
     clickable_selector: '.clickable',
     complete_msg_attr: 'data-msg-complete',
+    complete_uploading_msg_attr: 'data-msg-complete-uploading',
     complete_uploaded_msg_attr: 'data-msg-complete-uploaded',
     final_points_msg_attr: 'data-msg-final',
     clicks_left_msg_selector: '.pointandclick-clicksleftmsg',
@@ -160,6 +161,11 @@
     
     grade: function() {
       var self = this;
+      
+      if (window.location.pathname.substring(0, 6) !== '/html/') {
+        // hide this uploading message when acos html protocol is used since it does not store any grading
+        this.completeDiv.text(this.completeDiv.attr(this.settings.complete_uploading_msg_attr));
+      }
       
       var scorePercentage = Math.round(this.maxCorrectClicks / (this.correctClicks + this.incorrectClicks) * 100);
       
