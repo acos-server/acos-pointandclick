@@ -14,6 +14,7 @@
     complete_msg_attr: 'data-msg-complete',
     complete_uploading_msg_attr: 'data-msg-complete-uploading',
     complete_uploaded_msg_attr: 'data-msg-complete-uploaded',
+    complete_error_msg_attr: 'data-msg-complete-error',
     final_points_msg_attr: 'data-msg-final',
     clicks_left_msg_selector: '.pointandclick-clicksleftmsg',
     clicks_left_singular_msg_attr: 'data-msg-singular',
@@ -184,8 +185,12 @@
       var feedback = this.buildFeedback();
       if (window.ACOS) {
         // set max points to 100 since the points are given as a percentage 0-100%
-        ACOS.sendEvent('grade', { max_points: 100, points: scorePercentage, feedback: feedback }, function(content) {
-          //TODO callback arguments are missing potential error message if the upload fails (from ACOS to LMS), update ACOS docs and protocol events.js ??
+        ACOS.sendEvent('grade', { max_points: 100, points: scorePercentage, feedback: feedback }, function(content, error) {
+          if (error) {
+            // error in uploading the grading result to the server, show a message to the user
+            self.completeDiv.text(self.completeDiv.attr(self.settings.complete_error_msg_attr) + error.error);
+            return;
+          }
           // the grading result has been sent to the server
           self.completeDiv.text(self.completeDiv.attr(self.settings.complete_uploaded_msg_attr));
         });
