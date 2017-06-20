@@ -192,7 +192,10 @@
             return;
           }
           // the grading result has been sent to the server
-          self.completeDiv.text(self.completeDiv.attr(self.settings.complete_uploaded_msg_attr));
+          if (window.location.pathname.substring(0, 6) !== '/html/') {
+            // hide this uploading message when acos html protocol is used since it does not store any grading
+            self.completeDiv.text(self.completeDiv.attr(self.settings.complete_uploaded_msg_attr));
+          }
         });
       }
     },
