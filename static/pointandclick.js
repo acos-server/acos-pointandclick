@@ -38,6 +38,7 @@
     this.correctClicks = 0;
     this.incorrectClicks = 0;
     this.maxCorrectClicks = 0; // total correct answers in the exercise, set in init()
+    this.clickLog = []; // all answers (clicks) for logging
     this.init();
   }
   
@@ -128,8 +129,9 @@
         this.feedbackDiv.html('[No feedback set]');
       }
       
-      // send logging event to ACOS (only once for each clickable element)
-      if (!wasAnswered && window.ACOS) {
+      // save the answer for logging (only once for each clickable element)
+      // the full log is uploaded to the ACOS server at the end
+      if (!wasAnswered) {
         // log that an element was clicked, with the label a log analyzer can check if it was correct or not (exercise JSON has the same labels)
         // IDs are unique, labels may be reused
         // no user ID is used here
@@ -137,8 +139,10 @@
         var logPayload = {
           qid: questionId,
           qlabel: questionLabel,
+          time: new Date().toISOString(), // current time
         };
-        window.ACOS.sendEvent('log', logPayload);
+        
+        this.clickLog.push(logPayload);
       }
       
       this.updatePoints();
@@ -166,6 +170,7 @@
         this.completeDiv.text(this.completeDiv.attr(this.settings.complete_msg_attr));
         this.completeDiv.show();
         this.grade();
+        this.sendLog();
       }
     },
     
@@ -283,6 +288,12 @@
         var h = $(window).height() * 0.25;
         this.infoDiv.css('maxHeight', h);
         this.contentDiv.css('marginBottom', h);
+      }
+    },
+    
+    sendLog: function() {
+      if (window.ACOS) {
+        window.ACOS.sendEvent('log', this.clickLog);
       }
     },
   });
