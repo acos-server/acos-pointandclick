@@ -250,6 +250,10 @@
       // ensure that points are visible
       feedbackElem.find(self.settings.points_selector).removeClass('hide');
       
+      // remove inline styles used for the fixed positioning of the info box
+      feedbackElem.find(this.settings.info_selector).removeClass('fixed').css('maxHeight', '');
+      feedbackElem.find(this.settings.content_selector).removeClass('fixed-info').css('marginBottom', '');
+      
       // wrap hack is used to get the outer HTML (HTML string including the top element)
       return feedbackElem.wrap('<div/>').parent().html();
     },
