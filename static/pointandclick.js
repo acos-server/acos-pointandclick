@@ -158,7 +158,7 @@
         var msg = this.clicksLeftMsgDiv.attr(msgAttr);
         msg = msg.replace('{counter}', left.toString());
         this.clicksLeftMsgDiv.html(msg);
-        this.clicksLeftMsgDiv.show();
+        this.clicksLeftMsgDiv.removeClass('hide').show();
       }
     },
     
@@ -168,7 +168,7 @@
         this.completed = true;
         this.clicksLeftMsgDiv.hide();
         this.completeDiv.text(this.completeDiv.attr(this.settings.complete_msg_attr));
-        this.completeDiv.show();
+        this.completeDiv.removeClass('hide').show();
         this.grade();
         this.sendLog();
       }
@@ -273,7 +273,7 @@
     updatePoints: function() {
       this.correctPointsElem.text(this.correctClicks);
       this.wrongPointsElem.text(this.incorrectClicks);
-      this.pointsDiv.show();
+      this.pointsDiv.removeClass('hide').show();
     },
     
     setInfoPosition: function() {
