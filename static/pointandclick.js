@@ -213,6 +213,9 @@
       feedbackElem.find(this.settings.feedback_selector).empty().removeClass('correct wrong neutral');
       feedbackElem.find(this.settings.clicks_left_msg_selector).remove();
       
+      // convert <img> src URLs to absolute URLs (with hostname) if they are currently relative (without hostname)
+      this.convertUrlAttrs(feedbackElem, 'img', 'src');
+      
       var labelsUsed = [];
       // remove class clickable from elements that were not clicked in this submission
       feedbackElem.find(this.settings.clickable_selector).filter(function(idx) {
@@ -231,7 +234,8 @@
         if (!(labelsUsed[i] in copy_payload)) {
           var payload = window.pointandclick[labelsUsed[i]];
           copy_payload[labelsUsed[i]] = {
-            'feedback': payload.feedback,
+            // convert relative URLs in feedback strings to absolute
+            'feedback': this.convertUrlsInFeedbackString(payload.feedback),
             'correct': payload.correct,
           };
         }
@@ -242,7 +246,7 @@
       
       // script that enables click events in the feedback page (click to show feedback)
       $('<script></script>', {
-        src: this.getWindowUrlDomain() + '/static/pointandclick/feedback.js', // URL to the ACOS server
+        src: getWindowUrlDomain() + '/static/pointandclick/feedback.js', // URL to the ACOS server
       }).appendTo(feedbackElem);
       
       // feedback CSS is injected to the feedback HTML in the ACOS server (pointandclick handleEvent)
@@ -272,10 +276,6 @@
       this.pointsDiv.show();
     },
     
-    getWindowUrlDomain: function() {
-      return window.location.protocol + '//' + window.location.host;
-    },
-    
     setInfoPosition: function() {
       if ($(window).height() * 0.8 > this.contentDiv.height()) {
         // exercise content fits easily in the window
@@ -300,7 +300,42 @@
         window.ACOS.sendEvent('log', this.clickLog);
       }
     },
+    
+    /** Convert relative URLs to absolute (include hostname in the URL) in element attribute values.
+     * 
+     * contentElem: jQuery object of the surrounding element that is searched for URLs to convert
+     * selector: selector used within the contentElem to find the elements that have URL attributes, e.g., "img"
+     * attr: name of the attribute that contains the URL, e.g., "src"
+     */
+    convertUrlAttrs: function(contentElem, selector, attr) {
+      contentElem.find(selector).attr(attr, function(idx, oldVal) {
+        if (oldVal) {
+          return convertUrlToAbsolute(oldVal);
+        }
+      });
+    },
+    
+    convertUrlsInFeedbackString: function(feedback) {
+      // feedback is an HTML string
+      // wrap in a div to make a jQuery object
+      var wrapper = $('<div></div>').html(feedback);
+      this.convertUrlAttrs(wrapper, 'img', 'src');
+      return wrapper.html();
+    },
   });
+  
+  function getWindowUrlDomain() {
+    return window.location.protocol + '//' + window.location.host;
+  }
+  
+  function convertUrlToAbsolute(url) {
+    var absoluteRegExp = /^(#|\/\/|\w+:)/;
+    if (!absoluteRegExp.test(url)) { // if not absolute URL
+      // assume that url is a root-relative URL (starts with "/" like "/static/...")
+      return getWindowUrlDomain() + url;
+    }
+    return url;
+  }
   
   // attach a method to jQuery objects that initializes point-and-click exercise
   // in the elements matched by the jQuery object
