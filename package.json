@@ -8,11 +8,7 @@
     }
   ],
   "dependencies": {
-    "lex": "~1.7.9",
-    "nunjucks": "~3.0.1",
-    "recursive-readdir": "^2.1.1",
-    "underscore": "~1.8.3",
-    "xml2js": "~0.4.17"
+    "nunjucks": "~3.0.1"
   },
   "description": "Point-and-click content type for the ACOS server",
   "devDependencies": {},
