@@ -1,0 +1,21 @@
+<div class="pointandclick">
+    <style>{{ cssStyle|safe }}</style>
+    <script type="text/javascript">
+      window.pointandclick = {{ payload|safe }};
+    </script>
+    <script src="{{ serverUrl|safe }}/static/pointandclick/feedback.js"></script>
+    
+    <div class="pointandclick-content">
+        {{ exercise|safe }}
+    </div>
+    
+    <div class="pointandclick-info">
+        <div class="pointandclick-feedback"></div>
+        <div class="pointandclick-points">
+          <b>You scored {{ score }}&nbsp;%.</b><br>
+          Correct: {{ correctAnswers }}<br>
+          Wrong: {{ incorrectAnswers }}<br>
+        </div>
+    </div>
+</div>
+

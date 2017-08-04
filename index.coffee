@@ -9,6 +9,23 @@ njEnv = nunjucks.configure(path.join(__dirname, 'views'))
 # cache parsed XML exercise definitions
 exerciseCache = {}
 
+
+finalFeedbackPayloadTransformer = (payload, serverAddress) ->
+  # payload.answers has the feedback object sent from the frontend
+  # do not include payload for questions that were not answered in the submission
+  # JSON parsing may convert numbers to number types but we need strings
+  labelsUsed = (x.toString() for x in payload.answers.labelsUsed)
+  for own label, obj of payload
+    if label == 'answers'
+      continue # special value used for the final feedback
+    if not (label in labelsUsed)
+      delete payload[label]
+    else
+      obj.feedback = pacutil.convertRelativeUrlsInHtml obj.feedback, serverAddress
+  delete payload.answers.labelsUsed
+  null
+
+
 Pointandclick =
 
   # Registers the content type at server startup
@@ -34,15 +51,10 @@ Pointandclick =
 
   handleEvent: (event, payload, req, res, protocolPayload, responseObj, cb) ->
     if event == 'grade' and payload.feedback?
-      # add <style> element for styling the final feedback
-      fs.readFile path.join(__dirname, 'static', 'feedback.css'), 'utf8', (err, cssData) ->
-        if (!err)
-          styleTag = "<style>#{ cssData }</style>"
-          # insert the <style> element inside the feedback <div> at the beginning
-          styleStartIdx = payload.feedback.indexOf('>') + 1 # should be the index after the end of the first <div> start tag
-          payload.feedback = payload.feedback.slice(0, styleStartIdx) + styleTag + payload.feedback.slice(styleStartIdx)
-        
-        cb event, payload, req, res, protocolPayload, responseObj
+      pacutil.buildFinalFeedback(Pointandclick, Pointandclick.handlers.contentPackages[req.params.contentPackage],
+        __dirname, Pointandclick.config.serverAddress, njEnv, exerciseCache, payload, req,
+        finalFeedbackPayloadTransformer,
+        () -> cb(event, payload, req, res, protocolPayload, responseObj))
       
       return # cb is called in the callback in this if branch
       

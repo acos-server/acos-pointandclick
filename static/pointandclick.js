@@ -27,6 +27,7 @@
     
     this.completed = false;
     this.questionAnswered = {};
+    this.idToLabel = {}; // map from question ids to their labels
     this.feedbackDiv = this.element.find(this.settings.feedback_selector);
     this.pointsDiv = this.element.find(this.settings.points_selector);
     this.completeDiv = this.element.find(this.settings.completed_selector);
@@ -52,9 +53,6 @@
       this.element.find(this.settings.clickable_selector).each(function() {
         var uniqueId = idCounter++;
         $(this).data('id', uniqueId);
-        // set the id to an attribute as well so that it is available to
-        // the final feedback when the exercise DOM is cloned
-        $(this).attr('data-id', uniqueId);
         
         var questionLabel = $(this).data('label'); // labels are set by the teacher, they may repeat the same values
         var payload = window.pointandclick[questionLabel];
@@ -63,9 +61,10 @@
         }
         
         self.questionAnswered[uniqueId] = false;
-        $(this).click(function(ev) {
-          self.clickWord(ev);
-        });
+        self.idToLabel[uniqueId] = questionLabel;
+      })
+      .click(function(ev) {
+        self.clickWord(ev);
       });
       
       this.setInfoPosition();
@@ -187,7 +186,7 @@
       // show final points
       this.addFinalPointsString(this.pointsDiv, scorePercentage);
       // feedback for the grading event that is sent to the server
-      var feedback = this.buildFeedback();
+      var feedback = this.buildFinalFeedback();
       if (window.ACOS) {
         // set max points to 100 since the points are given as a percentage 0-100%
         ACOS.sendEvent('grade', { max_points: 100, points: scorePercentage, feedback: feedback }, function(content, error) {
@@ -205,61 +204,29 @@
       }
     },
 
-    buildFeedback: function() {
-      var self = this;
-      // clone the exercise element and modify the clone a bit for the final feedback
-      var feedbackElem = this.element.clone();
-      feedbackElem.find(this.settings.completed_selector).remove();
-      feedbackElem.find(this.settings.feedback_selector).empty().removeClass('correct wrong neutral');
-      feedbackElem.find(this.settings.clicks_left_msg_selector).remove();
-      
-      // convert <img> src URLs to absolute URLs (with hostname) if they are currently relative (without hostname)
-      this.convertUrlAttrs(feedbackElem, 'img', 'src');
-      
+    buildFinalFeedback: function() {
       var labelsUsed = [];
-      // remove class clickable from elements that were not clicked in this submission
-      feedbackElem.find(this.settings.clickable_selector).filter(function(idx) {
-        var questionId = $(this).attr('data-id');
-        if (self.questionAnswered[questionId]) {
-          labelsUsed.push($(this).attr('data-label'));
-          return false;
-        } else {
-          return true;
-        }
-      }).removeClass(this.settings.clickable_selector.substr(1));
-      
-      var copy_payload = {};
-      // copy feedback and correct values from the payload for the clicked elements
-      for (var i = 0; i < labelsUsed.length; i++) {
-        if (!(labelsUsed[i] in copy_payload)) {
-          var payload = window.pointandclick[labelsUsed[i]];
-          copy_payload[labelsUsed[i]] = {
-            // convert relative URLs in feedback strings to absolute
-            'feedback': this.convertUrlsInFeedbackString(payload.feedback),
-            'correct': payload.correct,
-          };
+      // gather labels of the answered questions (no duplicates)
+      for (var uniqueId in this.questionAnswered) {
+        if (this.questionAnswered.hasOwnProperty(uniqueId)) {
+          if (this.questionAnswered[uniqueId]) {
+            // question was answered
+            var label = this.idToLabel[uniqueId];
+            if (labelsUsed.indexOf(label) === -1) {
+              labelsUsed.push(label);
+            }
+          }
         }
       }
       
-      // store the copied payload in the feedback element
-      $('<script></script>').text('window.pointandclick = ' + JSON.stringify(copy_payload) + ';').prependTo(feedbackElem);
-      
-      // script that enables click events in the feedback page (click to show feedback)
-      $('<script></script>', {
-        src: getWindowUrlDomain() + '/static/pointandclick/feedback.js', // URL to the ACOS server
-      }).appendTo(feedbackElem);
-      
-      // feedback CSS is injected to the feedback HTML in the ACOS server (pointandclick handleEvent)
-      
-      // ensure that points are visible
-      feedbackElem.find(self.settings.points_selector).removeClass('hide');
-      
-      // remove inline styles used for the fixed positioning of the info box
-      feedbackElem.find(this.settings.info_selector).removeClass('fixed').css('maxHeight', '');
-      feedbackElem.find(this.settings.content_selector).removeClass('fixed-info').css('marginBottom', '');
-      
-      // wrap hack is used to get the outer HTML (HTML string including the top element)
-      return feedbackElem.wrap('<div/>').parent().html();
+      return {
+        answers: {
+          answers: this.questionAnswered,
+          labelsUsed: labelsUsed,
+        },
+        correctAnswers: this.correctClicks,
+        incorrectAnswers: this.incorrectClicks,
+      };
     },
     
     addFinalPointsString: function(pointsElem, scorePercentage) {
@@ -301,41 +268,7 @@
       }
     },
     
-    /** Convert relative URLs to absolute (include hostname in the URL) in element attribute values.
-     * 
-     * contentElem: jQuery object of the surrounding element that is searched for URLs to convert
-     * selector: selector used within the contentElem to find the elements that have URL attributes, e.g., "img"
-     * attr: name of the attribute that contains the URL, e.g., "src"
-     */
-    convertUrlAttrs: function(contentElem, selector, attr) {
-      contentElem.find(selector).attr(attr, function(idx, oldVal) {
-        if (oldVal) {
-          return convertUrlToAbsolute(oldVal);
-        }
-      });
-    },
-    
-    convertUrlsInFeedbackString: function(feedback) {
-      // feedback is an HTML string
-      // wrap in a div to make a jQuery object
-      var wrapper = $('<div></div>').html(feedback);
-      this.convertUrlAttrs(wrapper, 'img', 'src');
-      return wrapper.html();
-    },
   });
-  
-  function getWindowUrlDomain() {
-    return window.location.protocol + '//' + window.location.host;
-  }
-  
-  function convertUrlToAbsolute(url) {
-    var absoluteRegExp = /^(#|\/\/|\w+:)/;
-    if (!absoluteRegExp.test(url)) { // if not absolute URL
-      // assume that url is a root-relative URL (starts with "/" like "/static/...")
-      return getWindowUrlDomain() + url;
-    }
-    return url;
-  }
   
   // attach a method to jQuery objects that initializes point-and-click exercise
   // in the elements matched by the jQuery object

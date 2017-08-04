@@ -4,6 +4,8 @@
  * is not used to make new submissions to the exercise; it only shows the state of
  * a previous submission.
  */
+document.addEventListener("DOMContentLoaded", function() {
+
 function initPointAndClickFeedback(element, options, $, window, document, undefined) {
   "use strict";
   
@@ -13,6 +15,7 @@ function initPointAndClickFeedback(element, options, $, window, document, undefi
     info_selector: '.pointandclick-info',
     content_selector: '.pointandclick-content',
     clickable_selector: '.clickable',
+    clickable_class: 'clickable',
   };
   
   function AcosPointAndClickFeedback(element, options) {
@@ -29,8 +32,24 @@ function initPointAndClickFeedback(element, options, $, window, document, undefi
   
     init: function() {
       var self = this;
-      this.element.find(this.settings.clickable_selector).click(function(ev) {
-        self.showFeedback($(ev.target));
+      var idCounter = 0;
+      this.element.find(this.settings.clickable_selector).each(function() {
+        // set unique ids before removing any clickables so that the ids match the original exercise
+        var uniqueId = idCounter++;
+        $(this).data('id', uniqueId);
+      })
+      .filter(function() {
+        // include the clickables that were answered
+        var uniqueId = $(this).data('id');
+        if (window.pointandclick.answers.answers[uniqueId]) {
+          self.initClickable($(this));
+          return true;
+        }
+        $(this).removeClass(self.settings.clickable_class);
+        return false;
+      })
+      .click(function() {
+        self.showFeedback($(this));
       });
       
       // the info/feedback box switches between normal and fixed positioning so that
@@ -44,6 +63,24 @@ function initPointAndClickFeedback(element, options, $, window, document, undefi
         self.setInfoWidth();
         self.setInfoPosition();
       });
+    },
+    
+    // set style and content to a clickable according to the answers made in the submission
+    initClickable: function(clickElem) {
+      var label = clickElem.data('label');
+      var payload = window.pointandclick[label];
+      
+      if (payload.correct === "true") {
+        clickElem.addClass('correct');
+      } else if (payload.correct === "false") {
+        clickElem.addClass('wrong');
+      } else {
+        clickElem.addClass('neutral');
+      }
+      
+      if (payload.reveal) {
+        clickElem.html(payload.reveal);
+      }
     },
     
     // click event handler: show the feedback associated with the element
@@ -95,18 +132,19 @@ function initPointAndClickFeedback(element, options, $, window, document, undefi
   });
   
   // initialize an instance of the class
-  new AcosPointAndClickFeedback(element, options);
+  return new AcosPointAndClickFeedback(element, options);
 }
 
-document.addEventListener("DOMContentLoaded", function() {
-  if (typeof require === 'function') {
-    // in Moodle
-    require(["jquery"], function(jQuery) {
-      initPointAndClickFeedback(jQuery('.pointandclick'), {}, jQuery, window, document);
-    });
-  } else {
-    // in A+
+
+if (typeof require === 'function') {
+  // in a require.js environment, such as Moodle
+  require(["jquery"], function(jQuery) {
     initPointAndClickFeedback(jQuery('.pointandclick'), {}, jQuery, window, document);
-  }
+  });
+} else {
+  // jQuery is defined globally (like in A+)
+  initPointAndClickFeedback(jQuery('.pointandclick'), {}, jQuery, window, document);
+}
+
 });
 

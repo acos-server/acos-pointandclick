@@ -3,12 +3,12 @@
   font-family: monospace, Lucida;
 }
 
-.clickable {
+.pointandclick .clickable {
   /* clickable spaces between words should not be collapsed (zero width, unclickable) at the end of lines */
   white-space: pre-wrap;
 }
 
-.clickable:hover {
+.pointandclick .clickable:hover {
   color: blue;
   background: #eee;
   cursor: pointer;
