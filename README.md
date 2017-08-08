@@ -1,9 +1,9 @@
 # Point-and-click exercises
 
-This content type for Acos server is especially designed for language learning.
+This content type for the Acos server is especially designed for language learning.
 
-To create your own exercises, copy the following files from the Point-and-click-english example content package:
-* package.json (as is)
+To create your own exercises (in a new content package), copy the following files from the `pointandclick-english` example content package:
+* package.json (modify the name and description fields)
 * index.coffee (edit metadata, leave everything else untouched)
 
 Any XML files in the `exercises` directory of the content package are recognized as exercises. 
@@ -14,9 +14,17 @@ Use `Commas.xml` as a basis for creating your own exercises. Note that the ACOS 
 You can specify content (correct answers, feedback, etc.) either by providing a hand-written JSON file or by using XML notation (JSON is recommended).
 The JSON file must be placed in the same directory as the exercise XML file and named similarly to the XML file (e.g., exercise1.xml goes with exercise1.json).
 
+This content type uses CoffeeScript. The easiest way to make it work is to install 
+CoffeeScript either globally or in the `acos-server` directory (`npm install coffeescript`) 
+and to ensure that the `acos-server` automatically recognizes `.coffee` files. That is 
+achieved by adding a line to the start of the `acos-server/app.js` file: 
+`require('coffee-script/register');`. Alternatively, the CoffeeScript code could be 
+compiled to JavaScript so that the deployment server does not require CoffeeScript at all.
 
 # Notation
 
+The content of the XML file is either an HTML fragment or a complete HTML document.
+It is parsed with an XML parser, hence it should be syntactically correct XML as well.
 The content must be wrapped in a single element. The following structure is valid:
 ```html
 <html>
@@ -78,13 +86,14 @@ In JSON, the same parameters can be set as follows:
 {
   "1": {
     "correct": "true",
-    "feedback": "This feedback is shown if the user clicks this."
+    "feedback": "This feedback is shown if the user clicks this.",
     "reveal": "This is revealed after clicking."
   }
 }
 ```
 
 With the curly bracket syntax, parameters can only be set using JSON.
+Note: the label `answers` may not be used in JSON, as it has been reserved for internal use.
 
 
 ## Referencing elements from JSON 
