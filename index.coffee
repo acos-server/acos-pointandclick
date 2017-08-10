@@ -77,7 +77,7 @@ Pointandclick =
     'description': 'Content type for point-and-click exercises.',
     'author': 'Tapio Auvinen',
     'license': 'MIT',
-    'version': '0.1.0',
+    'version': '0.2.0',
     'url': ''
   }
 
