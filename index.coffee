@@ -14,7 +14,14 @@ finalFeedbackPayloadTransformer = (payload, serverAddress) ->
   # payload.answers has the feedback object sent from the frontend
   # do not include payload for questions that were not answered in the submission
   # JSON parsing may convert numbers to number types but we need strings
-  labelsUsed = (x.toString() for x in payload.answers.labelsUsed)
+  if typeof payload.answers != 'object' or not Array.isArray payload.answers.labelsUsed
+    # payload is malformed, delete everything
+    for own label, obj of payload
+      delete payload[label]
+    return
+  else
+    labelsUsed = (x.toString() for x in payload.answers.labelsUsed)
+  
   for own label, obj of payload
     if label == 'answers'
       continue # special value used for the final feedback

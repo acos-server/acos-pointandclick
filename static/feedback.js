@@ -22,10 +22,35 @@ function initPointAndClickFeedback(element, options, $, window, document, undefi
     this.element = $(element);
     this.settings = $.extend({}, defaults, options);
     
+    // payload sanity check
+    if (!checkPayloadSanity(window.pointandclick)) {
+      console.error('Feedback payload is invalid!');
+      return;
+    }
+    
     this.feedbackDiv = this.element.find(this.settings.feedback_selector);
     this.infoDiv = this.element.find(this.settings.info_selector);
     this.contentDiv = this.element.find(this.settings.content_selector);
     this.init();
+  }
+  
+  // return true if the payload is sane, false otherwise
+  function checkPayloadSanity(payload) {
+    if (!payload)
+      return false;
+    
+    if (!payload.answers || !payload.answers.answers)
+      return false;
+    
+    if (typeof payload.answers.answers !== 'object')
+      return false;
+    
+    for (var t in payload.answers.answers) {
+      if (!(payload.answers.answers.hasOwnProperty(t) && typeof payload.answers.answers[t] === 'boolean')) {
+        return false;
+      }
+    }
+    return true;
   }
   
   $.extend(AcosPointAndClickFeedback.prototype, {
