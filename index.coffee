@@ -1,7 +1,7 @@
 fs = require('fs')
 path = require('path')
 nunjucks = require('nunjucks')
-pacutil = require('clickdragfillin-util')
+pacutil = require('acos-clickdragfillin-util')
 
 # nunjucks views (templates)
 njEnv = nunjucks.configure(path.join(__dirname, 'views'))

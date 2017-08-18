@@ -1,5 +1,5 @@
 .pointandclick {
-  font-family: monospace, Lucida;
+  font-family: monospace, Consolas;
 }
 
 .pointandclick-error {
@@ -64,3 +64,4 @@ code {
   background-color: #f9f2f4;
   border-radius: 4px;
 }
+
