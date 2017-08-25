@@ -78,14 +78,9 @@ function initPointAndClickFeedback(element, options, $, window, document, undefi
       });
       
       // the info/feedback box switches between normal and fixed positioning so that
-      // it is always easily readable (no matter where the viewport is scrolled)
+      // it is always easily readable
       this.setInfoPosition();
-      $(window).on('scroll', function() {
-        self.setInfoPosition();
-      });
-      this.setInfoWidth();
       $(window).on('resize', function() {
-        self.setInfoWidth();
         self.setInfoPosition();
       });
     },
@@ -137,22 +132,22 @@ function initPointAndClickFeedback(element, options, $, window, document, undefi
     },
     
     setInfoPosition: function() {
-      if ($(window).scrollTop() + $(window).height() > this.contentDiv.offset().top + this.contentDiv.height() + 100) {
-        // window scrolled down so that the area below the feedback content is visible
+      if ($(window).height() * 0.8 > this.contentDiv.height()) {
+        // exercise content fits easily in the window
         // use normal positioning for the info box
         this.infoDiv.removeClass('fixed');
         this.contentDiv.removeClass('fixed-info');
+        this.infoDiv.css('maxHeight', ''); // remove css property
+        this.contentDiv.css('marginBottom', '');
       } else {
-        // window scrolled up: use fixed positioning for the info box to keep it visible on the screen
+        // exercise content takes most space in the window or does not fit in:
+        // use fixed positioning for the info box to keep it visible on the screen
         this.infoDiv.addClass('fixed');
         this.contentDiv.addClass('fixed-info');
+        var h = $(window).height() * 0.25;
+        this.infoDiv.css('maxHeight', h);
+        this.contentDiv.css('marginBottom', h);
       }
-    },
-    
-    setInfoWidth: function() {
-      // if the info box has fixed position, it is necessary to set an absolute width in
-      // order to make it fill the whole horizontal space of the submission area in the page
-      this.infoDiv.width(this.contentDiv.width());
     },
   });
   

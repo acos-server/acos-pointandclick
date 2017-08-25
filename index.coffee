@@ -1,7 +1,7 @@
 fs = require('fs')
 path = require('path')
 nunjucks = require('nunjucks')
-pacutil = require('clickdragfillin-util')
+pacutil = require('acos-clickdragfillin-util')
 
 # nunjucks views (templates)
 njEnv = nunjucks.configure(path.join(__dirname, 'views'))
@@ -27,9 +27,9 @@ finalFeedbackPayloadTransformer = (payload, serverAddress) ->
       continue # special value used for the final feedback
     if not (label in labelsUsed)
       delete payload[label]
-    else
-      obj.feedback = pacutil.convertRelativeUrlsInHtml obj.feedback, serverAddress
+    
   delete payload.answers.labelsUsed
+  delete payload.finalcomment
   null
 
 
