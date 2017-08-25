@@ -64,7 +64,7 @@
         self.idToLabel[uniqueId] = questionLabel;
       })
       .click(function(ev) {
-        self.clickWord(ev);
+        self.clickWord(ev, $(this));
       });
       
       this.setInfoPosition();
@@ -73,14 +73,13 @@
       });
     },
     
-    clickWord: function(event) {
+    clickWord: function(event, element) { // element is the clickable
       if (this.completed) {
         // Exercise has been completed. Ignore further clicks.
         event.preventDefault();
         return false;
       }
 
-      var element = $(event.target); // clicked element
       var questionId = element.data('id');
       var questionLabel = element.data('label');
       var payload = window.pointandclick[questionLabel];
@@ -118,7 +117,7 @@
       
       // Reveal correct answer
       if (payload.reveal) {
-        element.text(payload.reveal);
+        element.html(payload.reveal);
       }
       
       // Show feedback
