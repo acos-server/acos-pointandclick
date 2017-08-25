@@ -93,7 +93,20 @@ In JSON, the same parameters can be set as follows:
 ```
 
 With the curly bracket syntax, parameters can only be set using JSON.
-Note: the label `answers` may not be used in JSON, as it has been reserved for internal use.
+Note: the labels `answers` or `finalcomment` may not be used in JSON, as they have been reserved for internal use.
+
+Note: when using the curly bracket syntax and if the clickable content should consist
+of HTML code, for example an `<img>` element in order to use clickable images,
+then the curly brackets must be defined inside a CDATA section so that the XML parser
+does not separate the nested HTML elements from the curly brackets. The curly brackets
+with their whole contents must be first processed as text content so that the
+clickable element HTML structure is outputted.
+For example:
+```
+<p>surrounding normal HTML
+<![CDATA[{mylabel:<img src="/static/pointandclick-package/example-image.png" alt="example">}]]>
+other text continues</p>
+```
 
 
 ## Referencing elements from JSON 
@@ -132,6 +145,39 @@ i.e., the student may click on empty spaces between the words in this exercise. 
   }
 }
 ```
+
+
+# Final comment (extra feedback after completing the exercise)
+
+It is possible to show extra feedback to the student after the exercise has been completed.
+The extra feedback or final comment may depend on the student's final score, in addition
+to a common feedback phrase that is shown to everyone. The final comments and their
+score limits are defined in the JSON payload under a top-level key `finalcomment`.
+Final comments could be, for example, used to emphasize the important topics
+studied in the exercise, to provide pointers to suitable extra reading materials,
+or to just praise the student. Using final comments is optional.
+
+Example JSON:
+```
+{
+  "finalcomment": {
+    "common": "This phrase is shown to everyone after completing the exercise.",
+    "50": "You got only 50% or less of the available points. You can do better!",
+    "75": "Good job!",
+    "99": "Excellent work!",
+    "100": "Great, you got everything correct!"
+  }
+}
+```
+
+`finalcomment` must be an object (if it is used at all) and it may contain the
+key `common` to define feedback that is shown to everyone. Other keys should be
+score limits that define the feedback at the final score less than or equal to
+the limit. At most one of the score-based feedback phrases is selected at a time,
+thus the limits form brackets between each other. In the example JSON above,
+the feedback for key `50` is active if the student gains 0-50% score, while
+the feedback `75` is active for scores between 51 and 75%. The highest defined
+limit should be `100` or else there is no score-based feedback for perfect solutions.
 
 
 # Custom stylesheets

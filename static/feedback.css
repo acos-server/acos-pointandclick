@@ -25,11 +25,12 @@
 .pointandclick-info.fixed {
   position: fixed;
   bottom: 0px;
+  width: 98%;
   max-height: 200px;
   overflow-y: scroll;
 }
 
-.pointandclick-feedback {
+.pointandclick-feedback, .pointandclick-finalcomment {
   padding: 1em;
 }
 
