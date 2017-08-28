@@ -9,7 +9,7 @@
   ],
   "dependencies": {
     "nunjucks": "~3.0.1",
-    "acos-clickdragfillin-util": "git+ssh://git@version.aalto.fi:riekkim1/acos-clickdragfillin-util.git#8ecebf064ca488c3392368a68eeef8ed28fed0ce"
+    "acos-clickdragfillin-util": "~0.3.0"
   },
   "description": "Point-and-click content type for the ACOS server",
   "devDependencies": {},
@@ -20,10 +20,10 @@
   "readme": "",
   "readmeFilename": "README.md",
   "scripts": {},
-  "version": "0.2.0",
+  "version": "0.3.0",
   "repository": {
     "type": "git",
-    "url": "git@version.aalto.fi:jrybicki/acos-pointandclick.git"
+    "url": "git@github.com:acos-server/acos-pointandclick.git"
   }
 }
 
