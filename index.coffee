@@ -82,9 +82,9 @@ Pointandclick =
     'name': 'pointandclick',
     'shortDescription': 'Content type for point-and-click exercises.',
     'description': 'Content type for point-and-click exercises.',
-    'author': 'Tapio Auvinen',
+    'author': 'Tapio Auvinen, Markku Riekkinen',
     'license': 'MIT',
-    'version': '0.2.0',
+    'version': '0.3.0',
     'url': ''
   }
 
