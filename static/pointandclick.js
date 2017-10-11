@@ -136,8 +136,8 @@
       if (!wasAnswered) {
         // log that an element was clicked, with the label a log analyzer can check if it was correct or not (exercise JSON has the same labels)
         // IDs are unique, labels may be reused
-        // no user ID is used here
         // if this content type wants to log multiple things, we should add some type key to the payload (type: "click")
+        // the aplus protocol adds a user id to the payload
         var logPayload = {
           qid: questionId,
           qlabel: questionLabel,
