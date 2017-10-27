@@ -78,17 +78,19 @@
     },
     
     clickWord: function(event, element) { // element is the clickable
-      if (this.completed) {
-        // Exercise has been completed. Ignore further clicks.
-        event.preventDefault();
-        return false;
-      }
-
       var questionId = element.data('id');
       var questionLabel = element.data('label');
       var payload = window.pointandclick[questionLabel];
       // payload: teacher has defined correct/wrong elements and their feedback etc.
       var wasAnswered = this.questionAnswered[questionId];
+      
+      if (this.completed && !wasAnswered) {
+        // Exercise has been completed and the user clicked on something that
+        // had not been clicked previously. Ignore it as only feedback for
+        // answered questions should be shown at this stage.
+        event.preventDefault();
+        return false;
+      }
       
       this.feedbackDiv.removeClass('correct wrong neutral');
       
@@ -120,7 +122,7 @@
       }
       
       // Reveal correct answer
-      if (payload.reveal) {
+      if (payload.reveal && !wasAnswered) {
         element.html(payload.reveal);
       }
       
@@ -129,6 +131,13 @@
         this.feedbackDiv.html(payload.feedback);
       } else {
         this.feedbackDiv.html('[No feedback set]');
+      }
+      
+      if (this.completed) {
+        // Exercise has been completed and the user is clicking on previously
+        // answered questions to see their feedback again. Stop the event handler
+        // here after the feedback has been shown.
+        return;
       }
       
       // save the answer for logging (include also clicks on already answered questions
