@@ -131,21 +131,22 @@
         this.feedbackDiv.html('[No feedback set]');
       }
       
-      // save the answer for logging (only once for each clickable element)
+      // save the answer for logging (include also clicks on already answered questions
+      // since they indicate that the learner is carefully studying the feedback)
       // the full log is uploaded to the ACOS server at the end
-      if (!wasAnswered) {
-        // log that an element was clicked, with the label a log analyzer can check if it was correct or not (exercise JSON has the same labels)
-        // IDs are unique, labels may be reused
-        // if this content type wants to log multiple things, we should add some type key to the payload (type: "click")
-        // the aplus protocol adds a user id to the payload
-        var logPayload = {
-          qid: questionId,
-          qlabel: questionLabel,
-          time: new Date().toISOString(), // current time
-        };
-        
-        this.clickLog.push(logPayload);
+      // log that an element was clicked, with the label a log analyzer can check if it was correct or not (exercise JSON has the same labels)
+      // IDs are unique, labels may be reused
+      // the aplus protocol adds a user id to the payload
+      var logPayload = {
+        qid: questionId,
+        qlabel: questionLabel,
+        time: new Date().toISOString(), // current time
+      };
+      if (wasAnswered) {
+        // the clickable had already been clicked previously, so this click only showed the feedback again
+        logPayload.rerun = true;
       }
+      this.clickLog.push(logPayload);
       
       this.updatePoints();
       this.updateCorrectClicksLeftCounter();
