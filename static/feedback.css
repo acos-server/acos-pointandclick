@@ -1,6 +1,7 @@
 /* stylesheet for the final feedback of exercise submissions. For example, A+ shows the final feedback on a separate page. */
 .pointandclick {
   font-family: monospace, Lucida;
+  font-size: 14px;
 }
 
 .pointandclick .clickable {
@@ -12,6 +13,10 @@
   color: blue;
   background: #eee;
   cursor: pointer;
+}
+
+.pointandclick-content {
+  line-height: 1.3;
 }
 
 .pointandclick-content.fixed-info {
