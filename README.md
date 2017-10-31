@@ -1,8 +1,8 @@
 # Point-and-click exercises
 
-This content type for the Acos server is especially designed for language learning.
+This content type for the [ACOS server](https://github.com/acos-server/acos-server) is especially designed for language learning.
 
-To create your own exercises (in a new content package), copy the following files from the `pointandclick-english` example content package:
+To create your own exercises (in a new content package), copy the following files from the [pointandclick-example](https://github.com/acos-server/acos-pointandclick-example) example content package ([NPM package](https://www.npmjs.com/package/acos-pointandclick-example)):
 * package.json (modify the name and description fields)
 * index.coffee (edit metadata, leave everything else untouched)
 
