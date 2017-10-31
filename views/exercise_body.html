@@ -10,17 +10,17 @@
           data-msg-complete-uploaded="Exercise finished. Your submission has been uploaded to the server."
           data-msg-complete-error="Exercise finished, but your submission was not successfully uploaded to the server due to an error: ">
           <div class="pointandclick-complete-msg"></div>
-          <div class="pointandclick-finalcomment"></div>
+          <div class="pointandclick-finalcomment hide"></div>
         </div>
         <div class="pointandclick-feedback"></div>
-        <div class="pointandclick-clicksleftmsg hide"
-            data-msg-plural="&lt;b&gt;{counter} more correct answers left!&lt;/b&gt;"
-            data-msg-singular="&lt;b&gt;{counter} more correct answer left!&lt;/b&gt;">
-        </div>
         <div class="pointandclick-points hide"
-            data-msg-final="&lt;b&gt;You scored {score}%.&lt;/b&gt;&lt;br&gt;">
-          Correct: <span class="pointandclick-correct-clicks"></span><br/>
-          Wrong: <span class="pointandclick-wrong-clicks"></span><br/>
+            data-msg-final="&lt;b&gt;You scored {score}%.&lt;/b&gt;">
+          <span class="pointandclick-clicksleftmsg hide"
+              data-msg-plural="&lt;b&gt;{counter} more correct answers left!&lt;/b&gt;"
+              data-msg-singular="&lt;b&gt;{counter} more correct answer left!&lt;/b&gt;">
+          </span>
+          Correct: <span class="pointandclick-correct-clicks"></span>
+          Wrong: <span class="pointandclick-wrong-clicks"></span>
         </div>
     </div>
 </div>

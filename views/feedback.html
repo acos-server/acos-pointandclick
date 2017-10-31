@@ -23,11 +23,13 @@
     <div class="pointandclick-info">
         <div class="pointandclick-feedback"></div>
         <div class="pointandclick-points">
-          <b>You scored {{ score }}%.</b><br>
-          Correct: {{ correctAnswers }}<br>
-          Wrong: {{ incorrectAnswers }}<br>
+          <b>You scored {{ score }}%.</b>
+          Correct: <span class="pointandclick-correct-clicks">{{ correctAnswers }}</span>
+          Wrong: {{ incorrectAnswers }}
         </div>
+        {% if finalComment %}
         <div class="pointandclick-finalcomment">{{ finalComment|safe }}</div>
+        {% endif %}
     </div>
 </div>
 

@@ -297,6 +297,7 @@
       }
       
       this.finalComment.html(html);
+      this.finalComment.removeClass('hide').show();
     },
     
     setInfoPosition: function() {
