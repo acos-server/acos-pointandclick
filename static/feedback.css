@@ -35,8 +35,13 @@
   overflow-y: scroll;
 }
 
-.pointandclick-feedback, .pointandclick-finalcomment {
+.pointandclick-feedback {
   padding: 1em;
+}
+
+.pointandclick-finalcomment {
+  background-color: rgb(159, 224, 244);
+  padding: 0.5em 1em 0.5em;
 }
 
 .pointandclick .correct {
