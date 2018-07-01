@@ -12,9 +12,13 @@
     "acos-clickdragfillin-util": "~0.3.0"
   },
   "description": "Point-and-click content type for the ACOS server",
-  "devDependencies": {},
+  "devDependencies": {
+    "coffeescript": "~2.3.1",
+    "grunt": "^1.0.3",
+    "grunt-contrib-uglify-es": "^3.3.0"
+  },
   "license": "MIT",
-  "main": "index.coffee",
+  "main": "index.js",
   "name": "acos-pointandclick",
   "optionalDependencies": {},
   "readme": "",
@@ -23,6 +27,6 @@
   "version": "0.3.1",
   "repository": {
     "type": "git",
-    "url": "git@github.com:acos-server/acos-pointandclick.git"
+    "url": "https://github.com/acos-server/acos-pointandclick.git"
   }
 }
