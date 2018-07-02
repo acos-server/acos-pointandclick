@@ -71,40 +71,25 @@ class PointAndClick extends PointAndClickBase
       event.preventDefault()
       return false
     
-    @feedbackDiv.removeClass('correct wrong neutral')
-    
-    if not payload
-      @feedbackDiv.text('[Error: Question not configured (id=' + questionId + ')]')
-      return
-    
     @questionAnswered[questionId] = true
+    @showFeedback(element)
+    return unless payload
     
     # Update styles
     if payload.correct == "true"
-      @feedbackDiv.addClass('correct')
       element.addClass('correct')
-      
       if not wasAnswered
         @correctClicks += 1
     else if payload.correct == "false"
-      @feedbackDiv.addClass('wrong')
       element.addClass('wrong')
-      
       if not wasAnswered
         @incorrectClicks += 1
     else
-      @feedbackDiv.addClass('neutral')
       element.addClass('neutral')
     
     # Reveal correct answer
     if payload.reveal and not wasAnswered
       element.html(payload.reveal)
-    
-    # Show feedback
-    if payload.feedback
-      @feedbackDiv.html(payload.feedback)
-    else
-      @feedbackDiv.html('[No feedback set]')
     
     if @completed
       # Exercise has been completed and the user is clicking on previously

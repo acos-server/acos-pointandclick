@@ -24,11 +24,12 @@ class PointAndClickBase
   # click event handler: show the feedback associated with the element
   showFeedback: (clickedElement) ->
     label = clickedElement.data('label')
+    questionId = clickedElement.data('id')
     payload = window.pointandclick[label]
     @feedbackDiv.removeClass('correct wrong neutral')
     
     if not payload
-      @feedbackDiv.text("[Error: payload not set]")
+      @feedbackDiv.text('[Error: question payload not configured (id=' + questionId + ')]')
       return
     
     # Update styles
