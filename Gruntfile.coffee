@@ -1,8 +1,10 @@
-coffeescript = require 'coffeescript'
-
 module.exports = (grunt) ->
   grunt.initConfig
-    compilecoffee:
+    coffee:
+      options:
+        bare: false
+        join: true
+        separator: "\n\n"
       static:
         # the coffee source files must be concatenated before compiling to JS
         files:
@@ -21,33 +23,11 @@ module.exports = (grunt) ->
           'static/pointandclick.js': ['static/pointandclick.js']
           'static/feedback.js': ['static/feedback.js']
   
-  # Load the plugins (tasks "uglify")
+  # Load the plugins (tasks "coffee", "uglify")
+  grunt.loadNpmTasks 'grunt-contrib-coffee'
   grunt.loadNpmTasks 'grunt-contrib-uglify-es'
   
-  grunt.registerMultiTask 'compilecoffee', 'Compile CoffeeScript files to JavaScript', ->
-    # Compile coffee files defined in the configuration. Concatenate multiple source files before compiling.
-    @files.forEach (f) ->
-      contents = f.src.filter (filepath) ->
-        # Remove nonexistent files
-        if not grunt.file.exists filepath
-          grunt.log.warn('Source file "' + filepath + '" not found.')
-          false
-        else
-          true
-      .map (filepath) ->
-        # Read and return the file's source.
-        grunt.file.read filepath
-      .join("\n\n") # concatenate multiple source files
-      
-      js_code = coffeescript.compile contents
-      
-      # Write joined and compiled contents to destination filepath.
-      grunt.file.write f.dest, js_code
-      # Print a success message.
-      grunt.log.writeln 'File "' + f.dest + '" created.'
-
-
   # Default tasks
-  grunt.registerTask 'default', ['compilecoffee', 'uglify']
-  grunt.registerTask 'dev', ['compilecoffee']
+  grunt.registerTask 'default', ['coffee', 'uglify']
+  grunt.registerTask 'dev', ['coffee']
 

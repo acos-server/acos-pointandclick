@@ -13,8 +13,8 @@
   },
   "description": "Point-and-click content type for the ACOS server",
   "devDependencies": {
-    "coffeescript": "~2.3.1",
     "grunt": "^1.0.3",
+    "grunt-contrib-coffee": "^2.0.0",
     "grunt-contrib-uglify-es": "^3.3.0"
   },
   "license": "MIT",
@@ -23,7 +23,9 @@
   "optionalDependencies": {},
   "readme": "",
   "readmeFilename": "README.md",
-  "scripts": {},
+  "scripts": {
+    "grunt": "grunt"
+  },
   "version": "0.3.1",
   "repository": {
     "type": "git",
