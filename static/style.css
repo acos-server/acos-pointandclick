@@ -58,6 +58,33 @@
   padding-right: 1em;
 }
 
+.pointandclick-quit-button {
+  font-weight: 400;
+  text-align: center;
+  white-space: nowrap;
+  padding: 0.375em 0.75em;
+  line-height: 1;
+  color: rgb(0, 0, 0);
+  background-color: rgb(200, 200, 200);
+  border: 0;
+  border-radius: 0.25em;
+  box-shadow: inset 2px 2px 3px rgba(255, 255, 255, .6),
+              inset -2px -2px 3px rgba(0, 0, 0, .6);
+}
+.pointandclick-quit-button:hover {
+  background-color: rgb(170, 170, 170);
+}
+.pointandclick-quit-button:active {
+  box-shadow: inset -2px -2px 3px rgba(255, 255, 255, .6),
+              inset 2px 2px 3px rgba(0, 0, 0, .6);
+}
+.pointandclick-quit-button:disabled {
+  color: rgb(230, 230, 230);
+  background-color: rgb(180, 180, 180);
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
 .correct {
   background: #cfc;
   border: solid 2px green;

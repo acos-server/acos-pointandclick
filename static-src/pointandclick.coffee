@@ -16,6 +16,7 @@ class PointAndClick extends PointAndClickBase
     clicks_left_msg_selector: '.pointandclick-clicksleftmsg'
     clicks_left_singular_msg_attr: 'data-msg-singular'
     clicks_left_plural_msg_attr: 'data-msg-plural'
+    quit_button_selector: '[data-quit-button]'
   
   constructor: (element, options) ->
     super(element, options)
@@ -31,6 +32,7 @@ class PointAndClick extends PointAndClickBase
     @clicksLeftMsgDiv = @element.find(@settings.clicks_left_msg_selector)
     @contentDiv = @element.find(@settings.content_selector)
     @infoDiv = @element.find(@settings.info_selector)
+    @quitButton = @element.find(@settings.quit_button_selector)
     @correctClicks = 0
     @incorrectClicks = 0
     @maxCorrectClicks = 0 # total correct answers in the exercise, set in init()
@@ -55,6 +57,12 @@ class PointAndClick extends PointAndClickBase
       self.idToLabel[uniqueId] = questionLabel
     .click (ev) ->
       self.clickWord ev, $(this)
+    
+    @quitButton.click ->
+      # submit the unfinished solution, that is to say, the user has not found
+      # all correct answers yet, but wants to quit and receive a grade anyway
+      self.completeExercise(true)
+      return
     super()
 
   clickWord: (event, element) -> # element is the clickable
@@ -96,6 +104,9 @@ class PointAndClick extends PointAndClickBase
       # answered questions to see their feedback again. Stop the event handler
       # here after the feedback has been shown.
       return
+    else
+      # the quit button is active after the first answer until the exercise is completed
+      @quitButton.prop('disabled', false)
     
     # save the answer for logging (include also clicks on already answered questions
     # since they indicate that the learner is carefully studying the feedback)
@@ -128,20 +139,27 @@ class PointAndClick extends PointAndClickBase
 
   # Check if every question has been answered and if yes, grade the submission
   checkCompletion: ->
-    if @correctClicks >= @maxCorrectClicks
-      @completed = true
-      @clicksLeftMsgDiv.hide()
-      @completeMsg.text(@completeDiv.attr(@settings.complete_msg_attr))
-      @completeDiv.removeClass('hide').show()
-      @grade()
-      @sendLog()
+    @completeExercise(false) if @correctClicks >= @maxCorrectClicks
+    return
+
+  completeExercise: (unfinished = false) ->
+    return if @completed
+    @completed = true
+    @quitButton.prop('disabled', true)
+    @clicksLeftMsgDiv.hide() unless unfinished
+    @completeMsg.text(@completeDiv.attr(@settings.complete_msg_attr))
+    @completeDiv.removeClass('hide').show()
+    @grade()
+    @sendLog()
 
   grade: ->
     if window.location.pathname.substring(0, 6) != '/html/'
       # hide this uploading message when acos html protocol is used since it does not store any grading
       @completeMsg.text(@completeDiv.attr(@settings.complete_uploading_msg_attr))
     
-    scorePercentage = Math.round(@maxCorrectClicks / (@correctClicks + @incorrectClicks) * 100)
+    # add a penalty if the exercise is submitted in an unfinished state (not all correct answers found)
+    penalty = 3 * (@maxCorrectClicks - @correctClicks)
+    scorePercentage = Math.round(@maxCorrectClicks / (@correctClicks + @incorrectClicks + penalty) * 100)
     
     # show final points
     @addFinalPointsString(@pointsDiv, scorePercentage)
@@ -171,12 +189,13 @@ class PointAndClick extends PointAndClickBase
         if labelsUsed.indexOf(label) == -1
           labelsUsed.push(label)
     
-    return
+    return {
       answers:
         answers: @questionAnswered
         labelsUsed: labelsUsed
       correctAnswers: @correctClicks
       incorrectAnswers: @incorrectClicks
+    }
 
   addFinalPointsString: (pointsElem, scorePercentage) ->
     # string to format, fill in score
