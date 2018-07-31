@@ -8,8 +8,8 @@
     }
   ],
   "dependencies": {
-    "nunjucks": "~3.0.1",
-    "acos-clickdragfillin-util": "~0.3.0"
+    "nunjucks": "^3.1.3",
+    "acos-clickdragfillin-util": "~0.3.3"
   },
   "description": "Point-and-click content type for the ACOS server",
   "devDependencies": {
