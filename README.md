@@ -141,7 +141,7 @@ i.e., the student may click on empty spaces between the words in this exercise. 
 ```
 
 
-# Final comment (extra feedback after completing the exercise)
+## Final comment (extra feedback after completing the exercise)
 
 It is possible to show extra feedback to the student after the exercise has been completed.
 The extra feedback or final comment may depend on the student's final score, in addition
@@ -196,6 +196,35 @@ Alternatively, you can create a CSS file in the static folder of the content pac
   <link href="/static/content-package-name/my-stylesheet.css" rel="stylesheet">
 </head>
 ```
+
+
+# Logging the learner's activity
+
+This content type uses the logging functionality of the ACOS server in order to
+record the learner's interactions with the exercise. The log event is sent to
+the server once at the end when the learner completes the exercise. Therefore,
+there is no record of activity if the learner uses the exercise without
+submitting a solution nor is there a record of how much the learner studies the
+feedback after completing the exercise. If the learner submits multiple solutions,
+there is a record of each submission. One log event contains the activity of one
+submission.
+
+The log events are written to the log file in the following format. There are
+three space-sepated fields: date, exercise data in JSON format, and protocol data
+in JSON format. The date in the beginning describes the time when the event was
+written to the log file and it is given in the ISO format `YYYY-MM-DDTHH:mm:ss.sssZ`.
+The structure of the protocol data depends on the protocol used to connect to
+the ACOS server. The exercise data is a JSON array of objects. Each object
+describes one answer (one click on a clickable) or a click on an existing answer
+to see its feedback again. The objects have the following fields:
+
+* `qid`: clickable ID (IDs start from zero and increment sequentially)
+* `qlabel`: clickable label
+* `time`: time of the action given as a date in the ISO format
+* `rerun`: if this field exists and has the boolean true value, this answer
+  had already been made previously. Repeating the same wrong answer does not
+  affect the grade, but it shows the feedback again.
+
 
 # To developers
 
