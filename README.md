@@ -221,9 +221,8 @@ to see its feedback again. The objects have the following fields:
 * `qid`: clickable ID (IDs start from zero and increment sequentially)
 * `qlabel`: clickable label
 * `time`: time of the action given as a date in the ISO format
-* `rerun`: if this field exists and has the boolean true value, this answer
-  had already been made previously. Repeating the same wrong answer does not
-  affect the grade, but it shows the feedback again.
+* `rerun`: if this field exists and has the boolean true value, this was not
+  a new answer. The learner clicked on an existing answer to see its feedback again.
 
 
 # To developers
